@@ -363,3 +363,122 @@ h2, h3 { margin-top: 0; }
   .match-pitch { width: 100%; }
   .player-token { width: 58px; height: 58px; font-size: 11px; }
 }
+
+
+.topbar-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Horizontal training pitch */
+.exercise-pitch.training-horizontal .half-line {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  right: auto;
+  width: 2px;
+  height: auto;
+}
+
+.exercise-pitch.training-horizontal .center-circle {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.exercise-pitch.training-horizontal .goal-area.top {
+  top: 27%;
+  left: 0;
+  width: 12%;
+  height: 46%;
+  border: 2px solid rgba(255,255,255,.8);
+  border-left: none;
+}
+
+.exercise-pitch.training-horizontal .goal-area.bottom {
+  top: 27%;
+  left: auto;
+  right: 0;
+  width: 12%;
+  height: 46%;
+  border: 2px solid rgba(255,255,255,.8);
+  border-right: none;
+}
+
+.exercise-pitch.training-horizontal .goal.top-goal {
+  top: 39%;
+  left: 0;
+  width: 28px;
+  height: 22%;
+  transform: translateX(-2px);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.exercise-pitch.training-horizontal .goal.bottom-goal {
+  top: 39%;
+  right: 0;
+  left: auto;
+  bottom: auto;
+  width: 28px;
+  height: 22%;
+  transform: translateX(2px);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* Dark / light theme */
+body[data-theme="dark"] {
+  --bg: #111614;
+  --card: #1b2520;
+  --text: #edf3ef;
+  --muted: #a6b5ad;
+  --accent: #2a8c58;
+  --accent-dark: #d8f0e1;
+  --line: #314239;
+  --danger: #d35b5b;
+  --blue: #2f7fd1;
+  --red: #cf4c4c;
+  --orange: #f49a2d;
+}
+
+body[data-theme="dark"] .tabs {
+  background: #19211d;
+  border-bottom: 1px solid var(--line);
+}
+
+body[data-theme="dark"] .tab {
+  color: #b8c5be;
+}
+
+body[data-theme="dark"] .tab.active {
+  background: #233329;
+  color: #e8f4ec;
+}
+
+body[data-theme="dark"] .subtab {
+  background: #233329;
+  color: #e8f4ec;
+}
+
+body[data-theme="dark"] .subtab.active {
+  background: var(--accent);
+  color: white;
+}
+
+body[data-theme="dark"] .bench {
+  background: #16201b;
+  border-color: #3a4a42;
+}
+
+body[data-theme="dark"] .goal {
+  background: rgba(20, 24, 22, 0.94);
+  color: #d7e1db;
+  border-color: #425047;
+}
+
+body[data-theme="dark"] .match-player-name {
+  background: rgba(20, 24, 22, 0.95);
+  color: #edf3ef;
+}
