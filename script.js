@@ -138,19 +138,19 @@ let currentExerciseIndex = 0;
 
 const matchInitial = {
   pitchPlayers: [
-    {name:"Liam", x:30, y:68},
-    {name:"Finn", x:70, y:68},
-    {name:"Charles", x:50, y:54},
-    {name:"Erik", x:35, y:38},
-    {name:"Ian", x:50, y:90}
+    {name:"Liam", indicator:"1", x:30, y:68},
+    {name:"Finn", indicator:"2", x:70, y:68},
+    {name:"Charles", indicator:"3", x:50, y:54},
+    {name:"Erik", indicator:"4", x:35, y:38},
+    {name:"Ian", indicator:"MV", x:50, y:90}
   ],
   benchPlayers: ["Frans","Endrit","John"],
   opponents: [
-    {x:30, y:28},
-    {x:70, y:28},
-    {x:50, y:40},
-    {x:62, y:16},
-    {x:50, y:8}
+    {indicator:"1", x:30, y:28},
+    {indicator:"2", x:70, y:28},
+    {indicator:"3", x:50, y:40},
+    {indicator:"4", x:62, y:16},
+    {indicator:"MV", x:50, y:8}
   ],
   ball: {x:50, y:50}
 };
@@ -173,8 +173,13 @@ function createToken(type, opts = {}) {
 
   if (type === "player") {
     el.className = "token player-token";
-    el.textContent = opts.name || "Spelare";
     el.dataset.name = opts.name || "Spelare";
+    if (opts.indicator) {
+      el.dataset.indicator = opts.indicator;
+      el.innerHTML = `<span class="match-indicator">${opts.indicator}</span>${opts.opponent ? "" : `<span class="match-player-name">${opts.name || "Spelare"}</span>`}`;
+    } else {
+      el.textContent = opts.name || "Spelare";
+    }
     if (opts.opponent) el.classList.add("opponent");
   }
   if (type === "coach") {
@@ -248,6 +253,21 @@ function maybeMoveToBench(ev, el) {
   }
 }
 
+function getNextOwnIndicator() {
+  const pitch = document.getElementById("matchPitch");
+  const used = new Set(
+    [...pitch.querySelectorAll('.player-token:not(.opponent):not(.coach)')]
+      .map(el => el.dataset.indicator)
+      .filter(Boolean)
+  );
+  return ["1","2","3","4","MV"].find(indicator => !used.has(indicator)) || "1";
+}
+
+function setMatchPlayerIndicator(el, indicator, name) {
+  el.dataset.indicator = indicator;
+  el.innerHTML = `<span class="match-indicator">${indicator}</span><span class="match-player-name">${name}</span>`;
+}
+
 function addPlayerToBench(name) {
   const bench = document.getElementById("bench");
   const el = createToken("player", {name});
@@ -259,7 +279,9 @@ function addPlayerToBench(name) {
       alert("Det är redan 5 egna spelare på planen. Flytta först en spelare till bänken.");
       return;
     }
-    placeToken(pitch, el, 50, 82);
+    const indicator = getNextOwnIndicator();
+    setMatchPlayerIndicator(el, indicator, name);
+    placeToken(pitch, el, 50, indicator === "MV" ? 90 : 82);
     updateMatchInfo();
   });
   bench.appendChild(el);
@@ -272,11 +294,11 @@ function resetMatch() {
   bench.innerHTML = "";
 
   matchInitial.pitchPlayers.forEach(p => {
-    placeToken(pitch, createToken("player", {name:p.name}), p.x, p.y);
+    placeToken(pitch, createToken("player", {name:p.name, indicator:p.indicator}), p.x, p.y);
   });
   matchInitial.benchPlayers.forEach(addPlayerToBench);
-  matchInitial.opponents.forEach((p, i) => {
-    placeToken(pitch, createToken("player", {name: i === 4 ? "MV" : "Motst.", opponent:true}), p.x, p.y);
+  matchInitial.opponents.forEach(p => {
+    placeToken(pitch, createToken("player", {name:"Motståndare", indicator:p.indicator, opponent:true}), p.x, p.y);
   });
   placeToken(pitch, createToken("ball"), matchInitial.ball.x, matchInitial.ball.y);
   updateMatchInfo();
@@ -304,7 +326,9 @@ function wireMatchTools() {
     updateMatchInfo();
   };
   document.getElementById("addOpponent").onclick = () => {
-    placeToken(pitch, createToken("player", {name:"Motst.", opponent:true}), 50, 20);
+    const used = new Set([...pitch.querySelectorAll(".player-token.opponent")].map(el => el.dataset.indicator).filter(Boolean));
+    const indicator = ["1","2","3","4","MV"].find(value => !used.has(value)) || String(used.size + 1);
+    placeToken(pitch, createToken("player", {name:"Motståndare", indicator, opponent:true}), 50, 20);
     updateMatchInfo();
   };
   document.getElementById("addBall").onclick = () => placeToken(pitch, createToken("ball"), 50, 50);
