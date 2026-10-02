@@ -1763,9 +1763,21 @@ function saveCurrentMatchToHistory() {
   if (enteredName === null) return;
 
   const name = enteredName.trim() || suggestedName;
-  matchHistory.unshift(makeMatchSnapshot(name));
+  const snapshot = makeMatchSnapshot(name);
+  matchHistory.unshift(snapshot);
   saveMatchHistory();
   renderHistory();
+
+  const totals = snapshot.players.map(player => ({
+    name: player.name,
+    play: (player.halves || []).reduce((sum, value) => sum + (Number(value) || 0), 0)
+  })).sort((a, b) => b.play - a.play);
+  const scorers = snapshot.goals.filter(goal => goal.playerName).map(goal => goal.playerName).join(", ") || "Inga registrerade";
+  const most = totals[0];
+  const least = totals[totals.length - 1];
+  setTimeout(() => {
+    alert(`Match sparad\n\nResultat: ${snapshot.score.home}–${snapshot.score.away}\nMålskyttar: ${scorers}\nMest speltid: ${most ? most.name + " " + fmtTime(most.play) : "–"}\nMinst speltid: ${least ? least.name + " " + fmtTime(least.play) : "–"}`);
+  }, 50);
 
   const btn = document.getElementById("saveMatchBtn");
   if (btn) {
@@ -2315,6 +2327,12 @@ function updateHalfUI() {
   }
 
   renderHalfTabs();
+
+  const startPeriodBtn = document.getElementById("matchStartPeriodBtn");
+  if (startPeriodBtn) {
+    startPeriodBtn.textContent = `Starta ${word.toLowerCase()} ${currentHalf + 1}`;
+    startPeriodBtn.hidden = Boolean(stopwatchStartedAt) || getLiveHalfElapsedMs(currentHalf) > 0;
+  }
 }
 
 function updateStopwatchDisplay() {
@@ -2376,6 +2394,13 @@ function setStopwatchControlState(isRunning) {
     button.setAttribute("aria-label", isRunning ? "Pausa matchklockan" : "Starta matchklockan");
     button.title = isRunning ? "Pausa matchklockan" : "Starta matchklockan";
   });
+
+  const startPeriodBtn = document.getElementById("matchStartPeriodBtn");
+  if (startPeriodBtn) {
+    const word = getPeriodLabelWord();
+    startPeriodBtn.textContent = `Starta ${word.toLowerCase()} ${currentHalf + 1}`;
+    startPeriodBtn.hidden = isRunning || getLiveHalfElapsedMs(currentHalf) > 0;
+  }
 }
 
 function toggleStopwatch() {
@@ -2615,6 +2640,9 @@ function initStopwatch() {
   const undoSubstitutionBtn = document.getElementById("undoSubstitutionBtn");
   if (undoSubstitutionBtn) undoSubstitutionBtn.onclick = undoLastSubstitution;
   updateUndoSubstitutionButton();
+
+  const matchStartPeriodBtn = document.getElementById("matchStartPeriodBtn");
+  if (matchStartPeriodBtn) matchStartPeriodBtn.onclick = startStopwatch;
 
   const resetWholeMatchBtn = document.getElementById("resetWholeMatchBtn");
   if (resetWholeMatchBtn) {
