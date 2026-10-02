@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.4.1";
+const APP_VERSION = "v1.4.2";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -1955,7 +1955,10 @@ function updateHalfUI() {
   const matchBannerLength = document.getElementById("matchBannerLength");
   if (matchBannerLength) {
     const unit = matchSettings.periodCount === 2 ? "halvlekar" : "perioder";
-    matchBannerLength.textContent = `Matchlängd: ${matchSettings.totalMinutes} min · ${matchSettings.periodCount} ${unit} × ${fmtDetailedTime(getPeriodTargetMs())}`;
+    matchBannerLength.innerHTML = `
+      <span>Matchtid: ${matchSettings.totalMinutes} min</span>
+      <span>${matchSettings.periodCount} ${unit} × ${fmtDetailedTime(getPeriodTargetMs())}</span>
+    `;
   }
 
   const timerLabel = document.getElementById("stopwatchPeriodLabel");
