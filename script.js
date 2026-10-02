@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.32";
+const APP_VERSION = "v1.6.33";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -809,15 +809,15 @@ function renderPlaytimeRoster() {
 
   const activePlayers = players
     .filter(player => player.location === "pitch" && player.role !== "MV")
-    .sort((a, b) => a.totalTime - b.totalTime || a.name.localeCompare(b.name, "sv"));
+    .sort((a, b) => a.name.localeCompare(b.name, "sv"));
 
   const goalkeeperPlayers = players
     .filter(player => player.location === "pitch" && player.role === "MV")
-    .sort((a, b) => a.totalTime - b.totalTime || a.name.localeCompare(b.name, "sv"));
+    .sort((a, b) => a.name.localeCompare(b.name, "sv"));
 
   const benchPlayers = players
     .filter(player => player.location === "bench")
-    .sort((a, b) => a.totalTime - b.totalTime || a.name.localeCompare(b.name, "sv"));
+    .sort((a, b) => a.name.localeCompare(b.name, "sv"));
 
   const renderPlayerRow = player => {
     const selected = player.name === selectedPlaytimePlayer ? " selected" : "";
