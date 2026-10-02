@@ -2470,3 +2470,33 @@ button.secondary:hover {
     margin-bottom: 12px;
   }
 }
+
+
+/* v1.5.1 - visible substitution timing on Playtime */
+.playtime-substitution-time {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.playtime-substitution-time strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.playtime-substitution-time.overdue-orange {
+  color: #ffb45d;
+}
+
+.playtime-substitution-time.overdue-orange strong {
+  color: #ffd2a0;
+}
+
+.playtime-substitution-time.overdue-red {
+  color: #ff7d7d;
+}
+
+.playtime-substitution-time.overdue-red strong {
+  color: #ffd0d0;
+}
