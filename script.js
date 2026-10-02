@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.4.2";
+const APP_VERSION = "v0.4.3";
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const ROLE_ORDER = {"1":1,"2":2,"3":3,"4":4,"MV":5};
@@ -236,11 +236,20 @@ function makeDraggable(el) {
     const move = ev => {
       el.style.left = `${ev.clientX}px`;
       el.style.top = `${ev.clientY}px`;
-      if (fromBench) { setSwapTarget(getOwnPitchPlayerAtPoint(ev.clientX, ev.clientY, el)); return; }
-      if (isGoalkeeper) {
-        const pitchTarget = getOwnPitchPlayerAtPoint(ev.clientX, ev.clientY, el);
+      if (fromBench) {
+        setSwapTarget(getOwnPitchPlayerAtPoint(ev.clientX, ev.clientY, el));
+        return;
+      }
+
+      if (isOwnPitchPlayer) {
         const benchTarget = getBenchPlayerAtPoint(ev.clientX, ev.clientY, el);
-        setSwapTarget(pitchTarget || benchTarget);
+
+        if (isGoalkeeper) {
+          const pitchTarget = getOwnPitchPlayerAtPoint(ev.clientX, ev.clientY, el);
+          setSwapTarget(pitchTarget || benchTarget);
+        } else {
+          setSwapTarget(benchTarget);
+        }
       }
     };
 
@@ -322,6 +331,33 @@ function makeDraggable(el) {
       }
 
       const canGoToBench = originParent.id === "matchPitch" && el.dataset.type === "player" && !el.classList.contains("opponent") && !el.classList.contains("coach");
+
+      if (canGoToBench && !isGoalkeeper) {
+        const benchTarget = getBenchPlayerAtPoint(ev.clientX, ev.clientY, el);
+
+        if (benchTarget) {
+          const outgoingName = el.dataset.name;
+          const incomingName = benchTarget.dataset.name;
+          const indicator = el.dataset.indicator;
+          const targetLeft = originLeft;
+          const targetTop = originTop;
+
+          benchTarget.remove();
+          setMatchPlayerIndicator(benchTarget, indicator, incomingName);
+          matchPitch.appendChild(benchTarget);
+          benchTarget.classList.remove("bench-player");
+          benchTarget.style.left = targetLeft;
+          benchTarget.style.top = targetTop;
+
+          el.remove();
+          addPlayerToBench(outgoingName);
+
+          clearSwapTarget();
+          updateMatchInfo();
+          return;
+        }
+      }
+
       if (canGoToBench && pointInside(bench.getBoundingClientRect(), ev.clientX, ev.clientY)) {
         const name = el.dataset.name;
         el.remove(); addPlayerToBench(name); clearSwapTarget(); updateMatchInfo(); return;
