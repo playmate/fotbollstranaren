@@ -226,3 +226,83 @@ body[data-theme="dark"] .swap-target { outline-color: #ffe46b !important; box-sh
   .player-token { width: 58px; height: 58px; font-size: 11px; }
   .bench-drag-preview { width: 58px !important; height: 58px !important; }
 }
+
+
+/* v0.4.2 - halves and always-visible playtime */
+.half-section {
+  margin-bottom: 14px;
+}
+
+.half-heading-row,
+.playtime-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.half-label,
+.playtime-sort-note {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.half-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  margin-top: 7px;
+}
+
+.half-btn {
+  padding: 8px 10px;
+  background: #eaf0ec;
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.half-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.playtime-section-visible {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.playtime-rank {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  background: #e6efe9;
+  color: var(--accent-dark);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.playtime-row {
+  grid-template-columns: 22px minmax(0, 1fr) auto auto;
+}
+
+body[data-theme="dark"] .half-btn {
+  background: #2a3931;
+  color: #f3f7f4;
+  border-color: #46584f;
+}
+
+body[data-theme="dark"] .half-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+body[data-theme="dark"] .playtime-rank {
+  background: #314239;
+  color: #edf3ef;
+}
