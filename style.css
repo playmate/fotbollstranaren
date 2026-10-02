@@ -1161,3 +1161,18 @@ button.secondary:hover {
     min-height: 48px !important;
   }
 }
+
+
+/* v0.8.1 - clearer goalkeeper badge in playtime */
+.playtime-player-row .goalkeeper-role {
+  background: #d4a017;
+  color: #17120a;
+  border: 1px solid #f0c34e;
+  padding: 3px 7px;
+  min-width: auto;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  box-shadow: 0 0 0 2px rgba(240,195,78,.12);
+}
