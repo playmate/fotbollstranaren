@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=1.0.3" />
+  <link rel="stylesheet" href="style.css?v=1.1.0" />
 </head>
 <body data-theme="dark">
   <div id="appSplash" class="app-splash" aria-hidden="true">
@@ -14,7 +14,7 @@
   </div>
   <div id="versionTracker" class="version-tracker" title="Versionsstatus">
     <span class="version-dot"></span>
-    <span id="versionText">Version v1.0.3</span>
+    <span id="versionText">Version v1.1.0</span>
   </div>
 
   <nav class="tabs">
@@ -23,6 +23,7 @@
     <button class="tab" data-tab="training">Träning</button>
     <button class="tab" data-tab="players">Spelare</button>
     <button class="tab" data-tab="history">Historik</button>
+    <button class="tab" data-tab="settings">Inställningar</button>
   </nav>
 
   <main>
@@ -87,20 +88,18 @@
       <div class="playtime-page-layout">
         <div class="panel playtime-control-panel">
           <div class="lineup-panel-head">
-            <h3>Halvlek och tid</h3>
-            <span id="halfLabel" class="half-label">Halvlek 1 av 3</span>
+            <h3>Matchtid</h3>
+            <span id="halfLabel" class="half-label">Halvlek 1 av 2</span>
           </div>
 
-          <div class="half-tabs" id="halfTabs">
-            <button class="half-btn active" data-half="0">1</button>
-            <button class="half-btn" data-half="1">2</button>
-            <button class="half-btn" data-half="2">3</button>
-          </div>
+          <div class="half-tabs" id="halfTabs"></div>
+          <div id="matchTimePlan" class="match-time-plan"></div>
 
           <div class="lineup-timer-row">
             <div>
-              <div class="lineup-timer-label">Tid i vald halvlek</div>
+              <div id="stopwatchPeriodLabel" class="lineup-timer-label">Tid i vald halvlek</div>
               <div id="stopwatchDisplay" class="stopwatch-display">00:00</div>
+              <div id="overtimeDisplay" class="overtime-display"></div>
             </div>
             <div class="stopwatch-actions">
               <button id="stopwatchToggle">Starta</button>
@@ -186,6 +185,41 @@
       <div id="historyList" class="history-list"></div>
     </section>
 
+    <section id="settings" class="page">
+      <div class="settings-layout">
+        <div class="panel settings-card">
+          <h3>Matchformat</h3>
+
+          <label class="settings-field">
+            <span>Antal halvlekar / perioder</span>
+            <select id="periodCountSetting">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+            </select>
+          </label>
+
+          <label class="settings-field">
+            <span>Total matchtid</span>
+            <div class="settings-input-row">
+              <input id="matchMinutesSetting" type="number" min="5" max="180" step="1" inputmode="numeric" />
+              <span>minuter</span>
+            </div>
+          </label>
+
+          <div class="settings-summary">
+            <span>Tid per halvlek/period</span>
+            <strong id="periodLengthSummary">15:00</strong>
+          </div>
+
+          <p class="settings-note">Tiden delas automatiskt lika mellan alla halvlekar/perioder.</p>
+        </div>
+      </div>
+    </section>
+
     <section id="players" class="page">
       <div class="player-manager-layout">
         <div class="panel player-add-panel">
@@ -239,6 +273,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=1.0.3"></script>
+  <script src="script.js?v=1.1.0"></script>
 </body>
 </html>
