@@ -1,3 +1,5 @@
+const APP_VERSION = "v0.3.0";
+
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 
@@ -444,3 +446,16 @@ renderPlayerCards();
 renderExerciseList();
 loadExercise();
 resetMatch();
+
+
+function initVersionTracker() {
+  const tracker = document.getElementById("versionTracker");
+  const text = document.getElementById("versionText");
+  if (!tracker || !text) return;
+
+  const deployedAt = "2026-10-02 13:45";
+  text.textContent = `Version ${APP_VERSION} • ${deployedAt}`;
+  tracker.classList.add("is-current");
+}
+
+initVersionTracker();
