@@ -2327,3 +2327,40 @@ button.secondary:hover {
 .player-manager-row .remove-player-btn {
   pointer-events: auto;
 }
+
+
+/* v1.4.0 - sortable history columns */
+.history-table th {
+  white-space: nowrap;
+}
+
+.history-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.history-sort-btn:hover,
+.history-sort-btn.active {
+  background: transparent;
+  color: var(--text);
+  filter: none;
+}
+
+.history-sort-btn span {
+  color: #6f8277;
+  font-size: 10px;
+}
+
+.history-sort-btn.active span {
+  color: #66c990;
+}
