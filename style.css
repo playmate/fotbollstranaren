@@ -431,3 +431,35 @@ body[data-theme="dark"] .match-player-name {
 .statistics-table {
   min-width: 760px;
 }
+
+
+/* v0.5.2 - current half + total time in the match panel */
+.playtime-row {
+  grid-template-columns: 22px minmax(72px, 1fr) auto auto;
+}
+
+.playtime-player-cell {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.playtime-player-cell strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playtime-split {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  min-width: 42px;
+}
+
+.playtime-mini-label {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
