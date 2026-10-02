@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.3.8";
+const APP_VERSION = "v0.3.9";
 
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
@@ -221,6 +221,20 @@ function placeFromPointer(container, el, clientX, clientY) {
   placeToken(container, el, x, y);
 }
 
+function getOwnPitchPlayerAtPoint(clientX, clientY, excludeEl = null) {
+  const candidates = [...document.querySelectorAll('#matchPitch .player-token:not(.opponent):not(.coach)')]
+    .filter(player => player !== excludeEl);
+
+  return candidates.find(player => {
+    const rect = player.getBoundingClientRect();
+    return pointInside(rect, clientX, clientY);
+  }) || null;
+}
+
+function clearSwapTarget() {
+  document.querySelectorAll(".swap-target").forEach(el => el.classList.remove("swap-target"));
+}
+
 function makeDraggable(el) {
   el.addEventListener("pointerdown", e => {
     e.preventDefault();
@@ -245,12 +259,24 @@ function makeDraggable(el) {
     el.style.top = `${e.clientY}px`;
     document.body.appendChild(el);
 
+    let currentSwapTarget = null;
+
     const move = ev => {
       el.style.left = `${ev.clientX}px`;
       el.style.top = `${ev.clientY}px`;
+
+      if (fromBench) {
+        const target = getOwnPitchPlayerAtPoint(ev.clientX, ev.clientY, el);
+        if (target !== currentSwapTarget) {
+          clearSwapTarget();
+          currentSwapTarget = target;
+          if (currentSwapTarget) currentSwapTarget.classList.add("swap-target");
+        }
+      }
     };
 
     const restoreToOrigin = () => {
+      clearSwapTarget();
       el.classList.remove("dragging", "dragging-floating");
       el.style.width = "";
       el.style.height = "";
@@ -277,12 +303,36 @@ function makeDraggable(el) {
       el.style.height = "";
 
       if (fromBench) {
+        const swapTarget = getOwnPitchPlayerAtPoint(ev.clientX, ev.clientY, el);
+
+        if (swapTarget) {
+          const indicator = swapTarget.dataset.indicator;
+          const targetLeft = swapTarget.style.left;
+          const targetTop = swapTarget.style.top;
+          const targetName = swapTarget.dataset.name;
+
+          swapTarget.remove();
+          addPlayerToBench(targetName);
+
+          setMatchPlayerIndicator(el, indicator, el.dataset.name);
+          matchPitch.appendChild(el);
+          el.classList.remove("bench-player");
+          el.style.left = targetLeft;
+          el.style.top = targetTop;
+
+          clearSwapTarget();
+          updateMatchInfo();
+          return;
+        }
+
+        clearSwapTarget();
+
         if (pointInside(matchPitch.getBoundingClientRect(), ev.clientX, ev.clientY)) {
           const playerCount = matchPitch.querySelectorAll('.player-token:not(.opponent):not(.coach)').length;
 
           if (playerCount >= 5) {
             restoreToOrigin();
-            alert("Det är redan 5 egna spelare på planen. Flytta först en spelare till bänken.");
+            alert("Det är redan 5 egna spelare på planen. Släpp spelaren på en aktiv spelare för att byta.");
             updateMatchInfo();
             return;
           }
@@ -309,6 +359,7 @@ function makeDraggable(el) {
         const name = el.dataset.name;
         el.remove();
         addPlayerToBench(name);
+        clearSwapTarget();
         updateMatchInfo();
         return;
       }
@@ -321,6 +372,7 @@ function makeDraggable(el) {
         el.style.top = originTop;
       }
 
+      clearSwapTarget();
       updateMatchInfo();
     };
 
