@@ -655,3 +655,111 @@ body[data-theme="dark"] .lineup-role {
     grid-template-columns: minmax(0, 1fr) 48px 54px !important;
   }
 }
+
+
+/* v0.6.1 - dark mode only */
+:root {
+  --bg: #111614;
+  --card: #1b2520;
+  --text: #edf3ef;
+  --muted: #a6b5ad;
+  --accent: #2a8c58;
+  --accent-dark: #d8f0e1;
+  --line: #314239;
+  --danger: #d35b5b;
+  --blue: #2f7fd1;
+  --red: #cf4c4c;
+  --orange: #f49a2d;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.tabs {
+  background: #19211d;
+  border-bottom-color: var(--line);
+}
+
+.tab {
+  color: #b8c5be;
+}
+
+.tab.active {
+  background: #233329;
+  color: #e8f4ec;
+}
+
+.pitch-card,
+.panel,
+.exercise-stage,
+.exercise-list,
+.player-card {
+  background: var(--card);
+  border-color: var(--line);
+}
+
+.subtab {
+  background: #233329;
+  color: #e8f4ec;
+  border: 1px solid #3a4b42;
+}
+
+.subtab.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: #49ad77;
+  box-shadow: 0 0 0 2px rgba(73,173,119,.18);
+}
+
+.exercise-item {
+  color: #dfe8e2;
+}
+
+.exercise-item:hover {
+  background: #223129;
+}
+
+.exercise-item.active {
+  background: #2d513d !important;
+  color: #ffffff !important;
+  border-color: #54b47f !important;
+  box-shadow: inset 4px 0 0 #66c990;
+}
+
+.goal {
+  background: rgba(20,24,22,.94);
+  color: #d7e1db;
+  border-color: #425047;
+}
+
+.bench,
+.lineup-bench {
+  background: transparent;
+}
+
+button.secondary {
+  background: #2a3931;
+  color: #f3f7f4;
+  border-color: #46584f;
+}
+
+button.secondary:hover {
+  background: #34483d;
+}
+
+.version-tracker {
+  background: rgba(24,32,28,.94);
+  color: #edf3ef;
+}
+
+.match-player-name {
+  background: transparent !important;
+  color: #fff !important;
+}
+
+.training-horizontal .player-token:not(.coach) {
+  font-size: 20px;
+  font-weight: 900;
+}
