@@ -1,11 +1,12 @@
-const APP_VERSION = "v1.2.0";
+const APP_VERSION = "v1.3.0";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
-const DEFAULT_MATCH_SETTINGS = { periodCount: 2, totalMinutes: 30 };
+const DEFAULT_MATCH_SETTINGS = { periodCount: 2, totalMinutes: 30, substitutionMinutes: 5 };
 let matchSettings = { ...DEFAULT_MATCH_SETTINGS, ...(JSON.parse(localStorage.getItem(MATCH_SETTINGS_KEY) || "null") || {}) };
 matchSettings.periodCount = Math.max(1, Math.min(6, Number(matchSettings.periodCount) || 2));
 matchSettings.totalMinutes = Math.max(5, Math.min(180, Number(matchSettings.totalMinutes) || 30));
+matchSettings.substitutionMinutes = Math.max(1, Math.min(30, Number(matchSettings.substitutionMinutes) || 5));
 
 function getPeriodIndexes() {
   return Array.from({ length: matchSettings.periodCount }, (_, index) => index);
@@ -42,7 +43,8 @@ function createEmptyPlayerStats() {
   return {
     halves: makePeriodArray(),
     benchHalves: makePeriodArray(),
-    keeperHalves: makePeriodArray()
+    keeperHalves: makePeriodArray(),
+    stintSeconds: 0
   };
 }
 
@@ -198,7 +200,8 @@ function saveCurrentMatchState() {
     playerStats: Object.fromEntries(PLAYERS.map(name => [name, {
       halves: normalizePeriodArray(playerStats[name]?.halves),
       benchHalves: normalizePeriodArray(playerStats[name]?.benchHalves),
-      keeperHalves: normalizePeriodArray(playerStats[name]?.keeperHalves)
+      keeperHalves: normalizePeriodArray(playerStats[name]?.keeperHalves),
+      stintSeconds: Number(playerStats[name]?.stintSeconds) || 0
     }])),
     pitchObjects: getPitchState(),
     benchPlayers: [...document.querySelectorAll("#bench .bench-player")].map(el => el.dataset.name)
@@ -241,6 +244,7 @@ function restoreCurrentMatchState() {
     playerStats[name].halves = normalizePeriodArray(saved.halves);
     playerStats[name].benchHalves = normalizePeriodArray(saved.benchHalves);
     playerStats[name].keeperHalves = normalizePeriodArray(saved.keeperHalves);
+    playerStats[name].stintSeconds = Number(saved.stintSeconds) || 0;
   });
 
   pitch.querySelectorAll(".token").forEach(el => el.remove());
@@ -387,6 +391,24 @@ function setMatchPlayerIndicator(el, indicator, name) {
   el.innerHTML = `<span class="match-indicator">${indicator}</span><span class="match-player-name">${name}</span>`;
 }
 
+function resetSubstitutionClock(name) {
+  if (playerStats[name]) playerStats[name].stintSeconds = 0;
+}
+
+function getLiveStintSeconds(name) {
+  const snapshot = getPlayerSnapshot(name);
+  const base = Number(playerStats[name]?.stintSeconds) || 0;
+  if (!stopwatchStartedAt || !stopwatchLastTick || snapshot.location !== "pitch") return base;
+  return base + ((Date.now() - stopwatchLastTick) / 1000);
+}
+
+function getSubstitutionTimerState(seconds) {
+  const target = matchSettings.substitutionMinutes * 60;
+  if (seconds >= target + 120) return "overdue-red";
+  if (seconds >= target) return "overdue-orange";
+  return "on-time";
+}
+
 function addPlayerToBench(name) {
   const bench = document.getElementById("bench");
   const el = createToken("player", {name});
@@ -400,6 +422,7 @@ function addPlayerToBench(name) {
       return;
     }
     const indicator = getNextOwnIndicator();
+    resetSubstitutionClock(name);
     setMatchPlayerIndicator(el, indicator, name);
     placeToken(pitch, el, 50, indicator === "MV" ? 90 : 82);
     updateMatchInfo();
@@ -497,6 +520,8 @@ function makeDraggable(el) {
           const targetLeft = swapTarget.style.left;
           const targetTop = swapTarget.style.top;
           const targetName = swapTarget.dataset.name;
+          resetSubstitutionClock(el.dataset.name);
+          resetSubstitutionClock(targetName);
           swapTarget.remove();
           addPlayerToBench(targetName);
           setMatchPlayerIndicator(el, indicator, el.dataset.name);
@@ -518,6 +543,7 @@ function makeDraggable(el) {
             return;
           }
           const indicator = getNextOwnIndicator();
+          resetSubstitutionClock(el.dataset.name);
           setMatchPlayerIndicator(el, indicator, el.dataset.name);
           placeFromPointer(matchPitch, el, ev.clientX, ev.clientY);
           updateMatchInfo();
@@ -549,6 +575,8 @@ function makeDraggable(el) {
         if (benchTarget) {
           const keeperName = el.dataset.name;
           const newKeeperName = benchTarget.dataset.name;
+          resetSubstitutionClock(keeperName);
+          resetSubstitutionClock(newKeeperName);
           benchTarget.remove();
           setMatchPlayerIndicator(benchTarget, "MV", newKeeperName);
           matchPitch.appendChild(benchTarget);
@@ -567,6 +595,8 @@ function makeDraggable(el) {
         if (benchTarget) {
           const outgoingName = el.dataset.name;
           const incomingName = benchTarget.dataset.name;
+          resetSubstitutionClock(outgoingName);
+          resetSubstitutionClock(incomingName);
           const indicator = el.dataset.indicator;
           const targetLeft = originLeft;
           const targetTop = originTop;
@@ -589,6 +619,7 @@ function makeDraggable(el) {
 
       if (canGoToBench && pointInside(bench.getBoundingClientRect(), ev.clientX, ev.clientY)) {
         const name = el.dataset.name;
+        resetSubstitutionClock(name);
         el.remove(); addPlayerToBench(name); clearSwapTarget(); updateMatchInfo(); return;
       }
 
@@ -778,6 +809,8 @@ function swapPlayersByClick(firstName, secondName) {
   if (!first.element || !second.element) return false;
 
   if (first.location === "pitch" && second.location === "bench") {
+    resetSubstitutionClock(firstName);
+    resetSubstitutionClock(secondName);
     const indicator = first.element.dataset.indicator;
     const left = first.element.style.left;
     const top = first.element.style.top;
@@ -860,6 +893,7 @@ function tickPlayerStats(deltaSeconds) {
 
     if (activeNames.has(name)) {
       stats.halves[currentHalf] += deltaSeconds;
+      stats.stintSeconds = (Number(stats.stintSeconds) || 0) + deltaSeconds;
       if (name === keeperName) stats.keeperHalves[currentHalf] += deltaSeconds;
     } else {
       stats.benchHalves[currentHalf] += deltaSeconds;
@@ -947,6 +981,7 @@ function resetPlayerStats() {
     playerStats[name].halves = makePeriodArray();
     playerStats[name].benchHalves = makePeriodArray();
     playerStats[name].keeperHalves = makePeriodArray();
+    playerStats[name].stintSeconds = 0;
   });
   updatePlaytimeStats();
 }
@@ -1222,20 +1257,34 @@ function getPlayerLocation(name) {
 function renderPlayerManager() {
   const root = document.getElementById("playerManagerList");
   const count = document.getElementById("playerCount");
+  const substitutionLength = document.getElementById("playerSubstitutionLength");
   if (count) count.textContent = String(PLAYERS.length);
+  if (substitutionLength) substitutionLength.textContent = `${matchSettings.substitutionMinutes} min`;
   if (!root) return;
 
   root.innerHTML = PLAYERS.map(name => {
     const location = getPlayerLocation(name);
-    const statusClass = location.startsWith("På plan") ? "on-pitch" : "on-bench";
+    const onPitch = location.startsWith("På plan");
+    const statusClass = onPitch ? "on-pitch" : "on-bench";
+    const playSeconds = getLivePlayerTotalSeconds(name);
+    const keeperSeconds = getLivePlayerKeeperTotalSeconds(name);
+    const stintSeconds = onPitch ? getLiveStintSeconds(name) : 0;
+    const timerState = onPitch ? getSubstitutionTimerState(stintSeconds) : "";
 
     return `
       <div class="player-manager-row">
         <div class="player-manager-main">
           <div class="player-manager-avatar">${name[0]?.toUpperCase() || "?"}</div>
-          <div>
-            <strong>${name}</strong>
-            <span class="lineup-status ${statusClass}">${location}</span>
+          <div class="player-manager-copy">
+            <div class="player-manager-name-row">
+              <strong>${name}</strong>
+              <span class="lineup-status ${statusClass}">${location}</span>
+            </div>
+            <div class="player-manager-stats">
+              <span>Speltid <strong>${fmtTime(playSeconds)}</strong></span>
+              <span>MV <strong>${fmtTime(keeperSeconds)}</strong></span>
+              ${onPitch ? `<span class="substitution-clock ${timerState}">Byte <strong>${fmtTime(stintSeconds)} / ${fmtTime(matchSettings.substitutionMinutes * 60)}</strong></span>` : ""}
+            </div>
           </div>
         </div>
         <button class="remove-player-btn" type="button" data-remove-player="${name}">Ta bort</button>
@@ -1960,11 +2009,12 @@ function resetAllMatchTimeAndStats() {
 function applyMatchSettings(nextSettings) {
   const nextPeriodCount = Math.max(1, Math.min(6, Number(nextSettings.periodCount) || 2));
   const nextTotalMinutes = Math.max(5, Math.min(180, Number(nextSettings.totalMinutes) || 30));
+  const nextSubstitutionMinutes = Math.max(1, Math.min(30, Number(nextSettings.substitutionMinutes ?? matchSettings.substitutionMinutes) || 5));
 
   if (stopwatchStartedAt) pauseStopwatch();
 
   const periodCountChanged = nextPeriodCount !== matchSettings.periodCount;
-  matchSettings = { periodCount: nextPeriodCount, totalMinutes: nextTotalMinutes };
+  matchSettings = { periodCount: nextPeriodCount, totalMinutes: nextTotalMinutes, substitutionMinutes: nextSubstitutionMinutes };
   saveMatchSettings();
 
   if (periodCountChanged) {
@@ -1988,21 +2038,30 @@ function updateSettingsUI() {
   const count = document.getElementById("periodCountSetting");
   const minutes = document.getElementById("matchMinutesSetting");
   const summary = document.getElementById("periodLengthSummary");
+  const substitution = document.getElementById("substitutionMinutesSetting");
 
   if (count) count.value = String(matchSettings.periodCount);
   if (minutes) minutes.value = String(matchSettings.totalMinutes);
+  if (substitution) substitution.value = String(matchSettings.substitutionMinutes);
   if (summary) summary.textContent = fmtDetailedTime(getPeriodTargetMs());
+  renderPlayerManager();
 }
 
 function initSettings() {
   const count = document.getElementById("periodCountSetting");
   const minutes = document.getElementById("matchMinutesSetting");
+  const substitution = document.getElementById("substitutionMinutesSetting");
 
-  if (count) count.onchange = () => applyMatchSettings({ periodCount: count.value, totalMinutes: matchSettings.totalMinutes });
+  if (count) count.onchange = () => applyMatchSettings({ periodCount: count.value, totalMinutes: matchSettings.totalMinutes, substitutionMinutes: matchSettings.substitutionMinutes });
   if (minutes) {
-    const saveMinutes = () => applyMatchSettings({ periodCount: matchSettings.periodCount, totalMinutes: minutes.value });
+    const saveMinutes = () => applyMatchSettings({ periodCount: matchSettings.periodCount, totalMinutes: minutes.value, substitutionMinutes: matchSettings.substitutionMinutes });
     minutes.onchange = saveMinutes;
     minutes.onblur = saveMinutes;
+  }
+  if (substitution) {
+    const saveSubstitution = () => applyMatchSettings({ periodCount: matchSettings.periodCount, totalMinutes: matchSettings.totalMinutes, substitutionMinutes: substitution.value });
+    substitution.onchange = saveSubstitution;
+    substitution.onblur = saveSubstitution;
   }
 
   updateSettingsUI();
