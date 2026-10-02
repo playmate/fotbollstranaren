@@ -3015,3 +3015,42 @@ button.secondary:hover {
     font-size: 12px;
   }
 }
+
+
+/* v1.6.15 - stronger time counters and clearer substitution warning */
+#matchPitch .player-token:not(.opponent):not(.coach) .match-indicator {
+  font-size: 18px;
+}
+
+.match-player-live-time {
+  font-size: 13px;
+  min-width: 50px;
+  padding: 4px 7px;
+}
+
+.match-player-live-time.is-over-substitution-time {
+  color: #ffad3d;
+  border-color: rgba(255, 173, 61, .7);
+  background: rgba(67, 43, 12, .95);
+}
+
+.match-bench-live-time {
+  font-size: 13px;
+  font-weight: 900;
+}
+
+@media (max-width: 640px) {
+  #matchPitch .player-token:not(.opponent):not(.coach) .match-indicator {
+    font-size: 17px;
+  }
+
+  .match-player-live-time {
+    font-size: 12px;
+    min-width: 46px;
+    padding: 4px 6px;
+  }
+
+  .match-bench-live-time {
+    font-size: 12px;
+  }
+}
