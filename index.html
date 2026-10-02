@@ -4,17 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=1.2.0" />
+  <link rel="stylesheet" href="style.css?v=1.3.0" />
 </head>
 <body data-theme="dark">
   <div id="appSplash" class="app-splash" aria-hidden="true">
     <div class="splash-logo">
-      <img class="splash-logo-image" src="assets/vaksala-sk-logo-large.png?v=1.2.0" alt="Vaksala SK Uppsala" />
+      <img class="splash-logo-image" src="assets/vaksala-sk-logo-large.png?v=1.3.0" alt="Vaksala SK Uppsala" />
     </div>
   </div>
   <div id="versionTracker" class="version-tracker" title="Versionsstatus">
     <span class="version-dot"></span>
-    <span id="versionText">Version v1.2.0</span>
+    <span id="versionText">Version v1.3.0</span>
   </div>
 
   <nav class="tabs">
@@ -228,7 +228,15 @@
             <strong id="periodLengthSummary">15:00</strong>
           </div>
 
-          <p class="settings-note">Tiden delas automatiskt lika mellan alla halvlekar/perioder.</p>
+          <label class="settings-field">
+            <span>Byteslängd</span>
+            <div class="settings-input-row">
+              <input id="substitutionMinutesSetting" type="number" min="1" max="30" step="1" inputmode="numeric" />
+              <span>minuter</span>
+            </div>
+          </label>
+
+          <p class="settings-note">Tiden delas automatiskt lika mellan alla halvlekar/perioder. Byteslängden används för att markera när en spelare varit inne länge utan byte.</p>
         </div>
       </div>
     </section>
@@ -248,7 +256,7 @@
           <div class="player-roster-head">
             <div>
               <h3>Aktuella spelare</h3>
-              <p><span id="playerCount">0</span> spelare i truppen</p>
+              <p><span id="playerCount">0</span> spelare · Byteslängd <span id="playerSubstitutionLength">5 min</span></p>
             </div>
           </div>
           <div id="playerManagerList" class="player-manager-list"></div>
@@ -320,6 +328,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=1.2.0"></script>
+  <script src="script.js?v=1.3.0"></script>
 </body>
 </html>
