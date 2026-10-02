@@ -1723,3 +1723,132 @@ button.secondary:hover {
     aspect-ratio: 2 / 3;
   }
 }
+
+
+/* v1.0.2 - startup logo / splash screen */
+.app-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(42,140,88,.13), transparent 34%),
+    #0d1210;
+  pointer-events: none;
+  animation: splash-shell 1.9s ease forwards;
+}
+
+.splash-logo {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  animation: splash-logo-in 1.9s cubic-bezier(.22,.8,.28,1) forwards;
+}
+
+.splash-crest {
+  width: 122px;
+  height: 144px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #f3f7f4;
+  border-radius: 30px 30px 44px 44px;
+  background:
+    linear-gradient(160deg, rgba(255,255,255,.08), transparent 45%),
+    #173f2b;
+  box-shadow:
+    0 16px 42px rgba(0,0,0,.38),
+    inset 0 0 0 5px rgba(255,255,255,.05);
+  overflow: hidden;
+}
+
+.splash-crest::after {
+  content: "";
+  position: absolute;
+  inset: auto 14px 17px;
+  height: 3px;
+  border-radius: 999px;
+  background: #77d09d;
+  opacity: .9;
+}
+
+.splash-ball {
+  font-size: 34px;
+  line-height: 1;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,.28));
+}
+
+.splash-vsk {
+  color: #fff;
+  font-size: 31px;
+  line-height: 1;
+  font-weight: 1000;
+  letter-spacing: .06em;
+}
+
+.splash-year {
+  margin-top: 7px;
+  color: #b8c8bf;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .18em;
+}
+
+.splash-name {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 1000;
+  letter-spacing: .18em;
+}
+
+.splash-subtitle {
+  margin-top: -6px;
+  color: #79cb9b;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .32em;
+}
+
+.app-splash.is-finished {
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+
+@keyframes splash-logo-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(.92);
+    filter: blur(4px);
+  }
+  22% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  72% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px) scale(1.02);
+    filter: blur(1px);
+  }
+}
+
+@keyframes splash-shell {
+  0%, 78% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-splash,
+  .splash-logo {
+    animation: none;
+  }
+}
