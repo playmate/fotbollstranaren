@@ -2648,3 +2648,36 @@ button.secondary:hover {
     flex: 1 1 140px;
   }
 }
+
+
+/* v1.6.4 - +/- period count setting */
+.settings-stepper {
+  display: grid;
+  grid-template-columns: 42px 64px 42px;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-stepper-btn {
+  min-height: 40px;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.settings-stepper-btn:disabled {
+  opacity: .35;
+  cursor: default;
+}
+
+.settings-stepper-value {
+  min-height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #111916;
+  color: var(--text);
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
