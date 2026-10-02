@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.3.7";
+const APP_VERSION = "v0.3.8";
 
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
