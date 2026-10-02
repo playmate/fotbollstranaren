@@ -3054,3 +3054,28 @@ button.secondary:hover {
     font-size: 12px;
   }
 }
+
+
+/* v1.6.16 - larger centered bench time */
+.lineup-bench .bench-player {
+  grid-template-columns: minmax(0, 1fr) 120px !important;
+}
+
+.match-bench-live-time {
+  justify-self: center;
+  text-align: center;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+@media (max-width: 640px) {
+  .lineup-bench .bench-player {
+    grid-template-columns: minmax(0, 1fr) 110px !important;
+  }
+
+  .match-bench-live-time {
+    font-size: 15px;
+  }
+}
