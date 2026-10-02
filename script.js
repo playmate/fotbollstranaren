@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.3.4";
+const APP_VERSION = "v0.3.5";
 
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
@@ -151,7 +151,7 @@ const matchInitial = {
     {indicator:"1", x:30, y:28},
     {indicator:"2", x:70, y:28},
     {indicator:"3", x:50, y:40},
-    {indicator:"4", x:62, y:16},
+    {indicator:"4", x:50, y:18},
     {indicator:"MV", x:50, y:8}
   ],
   ball: {x:50, y:50}
@@ -365,14 +365,36 @@ function resetMatch() {
 function updateMatchInfo() {
   const pitch = document.getElementById("matchPitch");
   const bench = document.getElementById("bench");
-  const own = pitch.querySelectorAll('.player-token:not(.opponent):not(.coach)').length;
+  const ownPlayers = [...pitch.querySelectorAll('.player-token:not(.opponent):not(.coach)')];
+  const benchPlayers = [...bench.querySelectorAll('.player-token')];
+  const own = ownPlayers.length;
   const opp = pitch.querySelectorAll('.player-token.opponent').length;
-  const benchCount = bench.querySelectorAll('.player-token').length;
+  const benchCount = benchPlayers.length;
+
   document.getElementById("matchInfo").innerHTML = `
     <div class="stat"><span>Egna på plan</span><strong>${own}</strong></div>
     <div class="stat"><span>Motståndare</span><strong>${opp}</strong></div>
     <div class="stat"><span>På bänken</span><strong>${benchCount}</strong></div>
   `;
+
+  const activeList = document.getElementById("activePlayersList");
+  const benchList = document.getElementById("benchPlayersList");
+
+  if (activeList) {
+    activeList.innerHTML = ownPlayers
+      .sort((a, b) => {
+        const order = {"1":1,"2":2,"3":3,"4":4,"MV":5};
+        return (order[a.dataset.indicator] || 99) - (order[b.dataset.indicator] || 99);
+      })
+      .map(el => `<div class="roster-chip">${el.dataset.indicator || ""} · ${el.dataset.name}</div>`)
+      .join("");
+  }
+
+  if (benchList) {
+    benchList.innerHTML = benchPlayers
+      .map(el => `<div class="roster-chip">${el.dataset.name}</div>`)
+      .join("");
+  }
 }
 
 function wireMatchTools() {
@@ -484,6 +506,54 @@ function initTheme() {
   }
 }
 
+function initStopwatch() {
+  const display = document.getElementById("stopwatchDisplay");
+  const toggle = document.getElementById("stopwatchToggle");
+  const reset = document.getElementById("stopwatchReset");
+  if (!display || !toggle || !reset) return;
+
+  let elapsedMs = 0;
+  let startedAt = null;
+  let timerId = null;
+
+  const render = () => {
+    const totalMs = elapsedMs + (startedAt ? Date.now() - startedAt : 0);
+    const totalSeconds = Math.floor(totalMs / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    display.textContent = `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+  };
+
+  const stop = () => {
+    if (!startedAt) return;
+    elapsedMs += Date.now() - startedAt;
+    startedAt = null;
+    clearInterval(timerId);
+    timerId = null;
+    toggle.textContent = "Starta";
+    render();
+  };
+
+  toggle.onclick = () => {
+    if (startedAt) {
+      stop();
+    } else {
+      startedAt = Date.now();
+      timerId = setInterval(render, 250);
+      toggle.textContent = "Pausa";
+      render();
+    }
+  };
+
+  reset.onclick = () => {
+    elapsedMs = 0;
+    startedAt = startedAt ? Date.now() : null;
+    render();
+  };
+
+  render();
+}
+
 document.getElementById("resetAllBtn").onclick = () => {
   resetMatch();
   currentCategory = "passing";
@@ -498,6 +568,7 @@ setTabs();
 setTrainingCategory();
 wireMatchTools();
 wireTrainingTools();
+initStopwatch();
 renderPlayerCards();
 renderExerciseList();
 loadExercise();
