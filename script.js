@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.7.0";
+const APP_VERSION = "v0.7.1";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 let PLAYERS = JSON.parse(localStorage.getItem("fotbollstranaren-players") || "null") || [...DEFAULT_PLAYERS];
@@ -17,7 +17,7 @@ PLAYERS.forEach(name => {
   playerStats[name] = createEmptyPlayerStats();
 });
 
-const exercises = {
+const DEFAULT_EXERCISES = {
   passing: [
     { id: "gate", title: "Passa genom porten", description: "Två spelare passar bollen genom en port av konor. Flytta porten eller gör den smalare för mer precision.", items: [
       {type:"player", name:"Liam", x:20, y:50}, {type:"player", name:"Finn", x:80, y:50}, {type:"ball", x:50, y:50}, {type:"cone", x:47, y:43}, {type:"cone", x:47, y:57}
@@ -53,6 +53,16 @@ const exercises = {
     ]}
   ]
 };
+
+function cloneExercises(source) {
+  return JSON.parse(JSON.stringify(source));
+}
+
+let exercises = JSON.parse(localStorage.getItem("fotbollstranaren-exercises") || "null") || cloneExercises(DEFAULT_EXERCISES);
+
+function saveExercises() {
+  localStorage.setItem("fotbollstranaren-exercises", JSON.stringify(exercises));
+}
 
 let objectCounter = 0;
 let currentCategory = "passing";
@@ -699,9 +709,14 @@ function updatePlayerCardsTimes() {
 function setTrainingCategory() {
   document.querySelectorAll(".subtab").forEach(btn => btn.addEventListener("click", () => {
     document.querySelectorAll(".subtab").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active"); currentCategory = btn.dataset.category; currentExerciseIndex = 0; renderExerciseList(); loadExercise();
+    btn.classList.add("active");
+    currentCategory = btn.dataset.category;
+    currentExerciseIndex = 0;
+    renderExerciseList();
+    loadExercise();
   }));
 }
+
 function renumberTrainingPlayers() {
   const pitch = document.getElementById("exercisePitch");
   const players = [...pitch.querySelectorAll('.player-token:not(.coach)')];
@@ -713,24 +728,119 @@ function renumberTrainingPlayers() {
 }
 
 function renderExerciseList() {
-  const root = document.getElementById("exerciseList"); root.innerHTML = "";
-  exercises[currentCategory].forEach((ex, idx) => {
-    const btn = document.createElement("button"); btn.className = "exercise-item" + (idx === currentExerciseIndex ? " active" : ""); btn.textContent = ex.title;
-    btn.onclick = () => { currentExerciseIndex = idx; renderExerciseList(); loadExercise(); };
-    root.appendChild(btn);
+  const root = document.getElementById("exerciseList");
+  root.innerHTML = "";
+
+  const categoryExercises = exercises[currentCategory] || [];
+
+  categoryExercises.forEach((ex, idx) => {
+    const row = document.createElement("div");
+    row.className = "exercise-list-row";
+
+    const btn = document.createElement("button");
+    btn.className = "exercise-item" + (idx === currentExerciseIndex ? " active" : "");
+    btn.textContent = ex.title;
+    btn.onclick = () => {
+      currentExerciseIndex = idx;
+      renderExerciseList();
+      loadExercise();
+    };
+
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "exercise-remove-btn";
+    removeBtn.type = "button";
+    removeBtn.title = "Ta bort övning";
+    removeBtn.textContent = "×";
+    removeBtn.onclick = event => {
+      event.stopPropagation();
+      removeExercise(idx);
+    };
+
+    row.appendChild(btn);
+    row.appendChild(removeBtn);
+    root.appendChild(row);
   });
+
+  if (categoryExercises.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "exercise-empty";
+    empty.textContent = "Inga övningar ännu.";
+    root.appendChild(empty);
+  }
 }
+
 function loadExercise() {
-  const ex = exercises[currentCategory][currentExerciseIndex];
+  const categoryExercises = exercises[currentCategory] || [];
+  const ex = categoryExercises[currentExerciseIndex];
+  const pitch = document.getElementById("exercisePitch");
+
+  pitch.querySelectorAll(".token").forEach(x => x.remove());
+
+  if (!ex) {
+    document.getElementById("exerciseTitle").textContent = "Ingen övning vald";
+    document.getElementById("exerciseDescription").textContent = "Lägg till en ny övning för att börja.";
+    return;
+  }
+
   document.getElementById("exerciseTitle").textContent = ex.title;
-  document.getElementById("exerciseDescription").textContent = ex.description;
-  const pitch = document.getElementById("exercisePitch"); pitch.querySelectorAll(".token").forEach(x => x.remove());
-  ex.items.forEach(item => { const token = createToken(item.type, {name:item.name}); placeToken(pitch, token, item.x, item.y); });
+  document.getElementById("exerciseDescription").textContent = ex.description || "";
+
+  ex.items.forEach(item => {
+    const token = createToken(item.type, {name:item.name});
+    placeToken(pitch, token, item.x, item.y);
+  });
+
   renumberTrainingPlayers();
 }
+
+function addExercise() {
+  const title = prompt("Namn på den nya övningen:");
+  if (title === null) return;
+
+  const cleanTitle = title.trim() || "Ny övning";
+  const categoryExercises = exercises[currentCategory] || (exercises[currentCategory] = []);
+
+  categoryExercises.push({
+    id: `custom-${Date.now()}`,
+    title: cleanTitle,
+    description: "",
+    items: [
+      {type:"ball", x:50, y:50}
+    ]
+  });
+
+  currentExerciseIndex = categoryExercises.length - 1;
+  saveExercises();
+  renderExerciseList();
+  loadExercise();
+}
+
+function removeExercise(index) {
+  const categoryExercises = exercises[currentCategory] || [];
+  const exercise = categoryExercises[index];
+  if (!exercise) return;
+
+  if (!confirm(`Ta bort övningen "${exercise.title}"?`)) return;
+
+  categoryExercises.splice(index, 1);
+  saveExercises();
+
+  if (currentExerciseIndex >= categoryExercises.length) {
+    currentExerciseIndex = Math.max(0, categoryExercises.length - 1);
+  } else if (index < currentExerciseIndex) {
+    currentExerciseIndex -= 1;
+  }
+
+  renderExerciseList();
+  loadExercise();
+}
+
 function wireTrainingTools() {
   const pitch = document.getElementById("exercisePitch");
+
+  document.getElementById("addExerciseBtn").onclick = addExercise;
   document.getElementById("resetExerciseBtn").onclick = loadExercise;
+
   document.getElementById("exAddPlayer").onclick = () => {
     placeToken(pitch, createToken("player", {name:"Spelare"}), 50, 70);
     renumberTrainingPlayers();
@@ -853,6 +963,9 @@ document.getElementById("resetAllBtn").onclick = () => {
   Object.keys(playerStats).forEach(name => delete playerStats[name]);
   PLAYERS.forEach(name => playerStats[name] = createEmptyPlayerStats());
   savePlayers();
+
+  exercises = cloneExercises(DEFAULT_EXERCISES);
+  saveExercises();
 
   resetMatch();
   currentCategory = "passing";
