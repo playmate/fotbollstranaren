@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.21";
+const APP_VERSION = "v1.6.22";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -1253,6 +1253,25 @@ function placeDefaultOpponents() {
   updateMatchInfo();
 }
 
+function resetFormation() {
+  const pitch = document.getElementById("matchPitch");
+  if (!pitch) return;
+
+  const slots = new Map(matchInitial.pitchPlayers.map(player => [
+    String(player.indicator),
+    { x: player.x, y: player.y }
+  ]));
+
+  pitch.querySelectorAll('.player-token:not(.opponent):not(.coach)').forEach(el => {
+    const slot = slots.get(String(el.dataset.indicator || ""));
+    if (!slot) return;
+    el.style.left = `${slot.x}%`;
+    el.style.top = `${slot.y}%`;
+  });
+
+  updateMatchInfo();
+}
+
 function resetMatch() {
   const pitch = document.getElementById("matchPitch");
   const bench = document.getElementById("bench");
@@ -1279,8 +1298,8 @@ function resetMatch() {
 function wireMatchTools() {
   const pitch = document.getElementById("matchPitch");
   document.getElementById("resetMatchBtn").onclick = () => {
-    if (!confirm("Återställ planen till standarduppställningen?")) return;
-    resetMatch();
+    if (!confirm("Återställ formationen för spelarna som är på planen?")) return;
+    resetFormation();
   };
   const placeOppBtn = document.getElementById("placeOppBtn");
   if (placeOppBtn) placeOppBtn.onclick = placeDefaultOpponents;
