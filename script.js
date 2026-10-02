@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.5.1";
+const APP_VERSION = "v1.5.2";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -824,13 +824,33 @@ function renderSubstitutionSuggestion() {
   const root = document.getElementById("substitutionSuggestion");
   if (!root) return;
 
+  const substitutionTargetSeconds = matchSettings.substitutionMinutes * 60;
+
   const active = PLAYERS
-    .map(name => ({ name, snapshot: getPlayerSnapshot(name), total: getLivePlayerTotalSeconds(name), bench: getLivePlayerBenchTotalSeconds(name) }))
+    .map(name => ({
+      name,
+      snapshot: getPlayerSnapshot(name),
+      total: getLivePlayerTotalSeconds(name),
+      bench: getLivePlayerBenchTotalSeconds(name),
+      stint: getLiveStintSeconds(name)
+    }))
     .filter(item => item.snapshot.location === "pitch" && item.snapshot.role !== "MV")
-    .sort((a,b) => b.total - a.total);
+    .sort((a, b) => {
+      const aOverdue = Math.max(0, a.stint - substitutionTargetSeconds);
+      const bOverdue = Math.max(0, b.stint - substitutionTargetSeconds);
+
+      if (aOverdue !== bOverdue) return bOverdue - aOverdue;
+      if (a.stint !== b.stint) return b.stint - a.stint;
+      return b.total - a.total;
+    });
 
   const bench = PLAYERS
-    .map(name => ({ name, snapshot: getPlayerSnapshot(name), total: getLivePlayerTotalSeconds(name), bench: getLivePlayerBenchTotalSeconds(name) }))
+    .map(name => ({
+      name,
+      snapshot: getPlayerSnapshot(name),
+      total: getLivePlayerTotalSeconds(name),
+      bench: getLivePlayerBenchTotalSeconds(name)
+    }))
     .filter(item => item.snapshot.location === "bench")
     .sort((a,b) => b.bench - a.bench || a.total - b.total);
 
@@ -841,10 +861,16 @@ function renderSubstitutionSuggestion() {
 
   const outgoing = active[0];
   const incoming = bench[0];
+  const overdueBy = Math.max(0, outgoing.stint - substitutionTargetSeconds);
+  const reason = overdueBy > 0
+    ? ` · ${fmtTime(overdueBy)} över byteslängd`
+    : "";
+
   root.innerHTML = `
     <div>
       <span>Bytesförslag</span>
       <strong>${incoming.name} in · ${outgoing.name} ut</strong>
+      <small class="substitution-reason">Tid sedan byte: ${fmtTime(outgoing.stint)} / ${fmtTime(substitutionTargetSeconds)}${reason}</small>
     </div>
     <button type="button" class="secondary compact-btn" id="selectSuggestionBtn">Markera</button>
   `;
