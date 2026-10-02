@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.7.1";
+const APP_VERSION = "v0.7.2";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 let PLAYERS = JSON.parse(localStorage.getItem("fotbollstranaren-players") || "null") || [...DEFAULT_PLAYERS];
@@ -421,13 +421,20 @@ function getPlayerRole(name) {
 function buildLineupRowInner(name, status, role = "") {
   const halfTime = getLivePlayerHalfSeconds(name, currentHalf);
   const totalTime = getLivePlayerTotalSeconds(name);
+  const benchHalfTime = getLivePlayerBenchHalfSeconds(name, currentHalf);
   const statusClass = status === "På plan" ? "on-pitch" : "on-bench";
   const roleHtml = role ? `<span class="lineup-role">${role}</span>` : "";
+  const benchTimeHtml = status === "På bänken"
+    ? `<span class="lineup-bench-time">${fmtTime(benchHalfTime)} på bänk</span>`
+    : "";
 
   return `
     <div class="lineup-player-info">
       <div class="lineup-player-name">${roleHtml}<span>${name}</span></div>
-      <span class="lineup-status ${statusClass}">${status}</span>
+      <div class="lineup-status-row">
+        <span class="lineup-status ${statusClass}">${status}</span>
+        ${benchTimeHtml}
+      </div>
     </div>
     <div class="lineup-time">${fmtTime(halfTime)}</div>
     <div class="lineup-time">${fmtTime(totalTime)}</div>
