@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.3.2";
+const APP_VERSION = "v0.3.3";
 
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
@@ -140,11 +140,11 @@ let currentExerciseIndex = 0;
 
 const matchInitial = {
   pitchPlayers: [
-    {name:"Liam", indicator:"1", x:50, y:24},
-    {name:"Ian", indicator:"2", x:30, y:52},
-    {name:"Erik", indicator:"3", x:70, y:52},
-    {name:"Frans", indicator:"4", x:50, y:72},
-    {name:"Endrit", indicator:"MV", x:50, y:90}
+    {name:"Liam", indicator:"1", x:50, y:55},
+    {name:"Ian", indicator:"2", x:28, y:68},
+    {name:"Erik", indicator:"3", x:72, y:68},
+    {name:"Frans", indicator:"4", x:50, y:80},
+    {name:"Endrit", indicator:"MV", x:50, y:94}
   ],
   benchPlayers: ["Finn","Charles","John"],
   opponents: [
