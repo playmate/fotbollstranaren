@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.3.3";
+const APP_VERSION = "v0.3.4";
 
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
@@ -330,6 +330,7 @@ function addPlayerToBench(name) {
   const el = createToken("player", {name});
   el.classList.add("bench-player");
   el.addEventListener("click", () => {
+    if (el.parentElement?.id !== "bench") return;
     const pitch = document.getElementById("matchPitch");
     const playerCount = pitch.querySelectorAll('.player-token:not(.opponent):not(.coach)').length;
     if (playerCount >= 5) {
