@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.8.2";
+const APP_VERSION = "v0.9.0";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 let PLAYERS = JSON.parse(localStorage.getItem("fotbollstranaren-players") || "null") || [...DEFAULT_PLAYERS];
@@ -64,6 +64,12 @@ function saveExercises() {
   localStorage.setItem("fotbollstranaren-exercises", JSON.stringify(exercises));
 }
 
+let matchHistory = JSON.parse(localStorage.getItem("fotbollstranaren-match-history") || "[]");
+
+function saveMatchHistory() {
+  localStorage.setItem("fotbollstranaren-match-history", JSON.stringify(matchHistory));
+}
+
 let objectCounter = 0;
 let currentCategory = "passing";
 let currentExerciseIndex = 0;
@@ -114,6 +120,9 @@ function setTabs() {
       renderPlaytimeRoster();
       updateHalfUI();
       updateStopwatchDisplay();
+    }
+    if (btn.dataset.tab === "history") {
+      renderHistory();
     }
   }));
 }
@@ -857,6 +866,165 @@ function updatePlayerCardsTimes() {
   renderPlayerManager();
 }
 
+function getLiveHalfElapsedMs(index) {
+  return halfElapsedMs[index] + (stopwatchStartedAt && currentHalf === index ? Date.now() - stopwatchStartedAt : 0);
+}
+
+function makeMatchSnapshot(name) {
+  const halfTimesMs = [0, 1, 2].map(getLiveHalfElapsedMs);
+
+  return {
+    id: `match-${Date.now()}`,
+    name,
+    savedAt: new Date().toISOString(),
+    halfTimesMs,
+    totalMatchMs: halfTimesMs.reduce((sum, ms) => sum + ms, 0),
+    players: PLAYERS.map(playerName => ({
+      name: playerName,
+      halves: [0, 1, 2].map(index => getLivePlayerHalfSeconds(playerName, index)),
+      benchHalves: [0, 1, 2].map(index => getLivePlayerBenchHalfSeconds(playerName, index)),
+      keeperHalves: [0, 1, 2].map(index => getLivePlayerKeeperHalfSeconds(playerName, index))
+    }))
+  };
+}
+
+function saveCurrentMatchToHistory() {
+  if (stopwatchStartedAt) onStopwatchTick();
+
+  const suggestedName = `Match ${matchHistory.length + 1}`;
+  const enteredName = prompt("Namn på matchen:", suggestedName);
+  if (enteredName === null) return;
+
+  const name = enteredName.trim() || suggestedName;
+  matchHistory.unshift(makeMatchSnapshot(name));
+  saveMatchHistory();
+  renderHistory();
+
+  const btn = document.getElementById("saveMatchBtn");
+  if (btn) {
+    const original = btn.textContent;
+    btn.textContent = "Sparad ✓";
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.disabled = false;
+    }, 1200);
+  }
+}
+
+function removeHistoryMatch(id) {
+  const match = matchHistory.find(item => item.id === id);
+  if (!match) return;
+
+  if (!confirm(`Ta bort "${match.name}" från historiken?`)) return;
+
+  matchHistory = matchHistory.filter(item => item.id !== id);
+  saveMatchHistory();
+  renderHistory();
+}
+
+function clearHistory() {
+  if (matchHistory.length === 0) return;
+  if (!confirm("Rensa hela matchhistoriken? Detta går inte att ångra.")) return;
+
+  matchHistory = [];
+  saveMatchHistory();
+  renderHistory();
+}
+
+function renderHistory() {
+  const root = document.getElementById("historyList");
+  const empty = document.getElementById("historyEmpty");
+  if (!root || !empty) return;
+
+  empty.style.display = matchHistory.length ? "none" : "block";
+
+  root.innerHTML = matchHistory.map(match => {
+    const date = new Date(match.savedAt);
+    const dateText = Number.isNaN(date.getTime())
+      ? ""
+      : date.toLocaleString("sv-SE", { dateStyle: "medium", timeStyle: "short" });
+
+    const playerRows = match.players.map(player => {
+      const total = player.halves.reduce((sum, seconds) => sum + seconds, 0);
+      const benchTotal = player.benchHalves.reduce((sum, seconds) => sum + seconds, 0);
+      const keeperTotal = player.keeperHalves.reduce((sum, seconds) => sum + seconds, 0);
+
+      return `
+        <tr>
+          <td><strong>${player.name}</strong></td>
+          <td>${fmtTime(player.halves[0])}</td>
+          <td>${fmtTime(player.halves[1])}</td>
+          <td>${fmtTime(player.halves[2])}</td>
+          <td>${fmtTime(total)}</td>
+          <td>${fmtTime(benchTotal)}</td>
+          <td>${fmtTime(keeperTotal)}</td>
+        </tr>
+      `;
+    }).join("");
+
+    return `
+      <details class="panel history-card">
+        <summary class="history-summary">
+          <div>
+            <strong>${match.name}</strong>
+            <span>${dateText}</span>
+          </div>
+          <div class="history-summary-time">${fmtTime(match.totalMatchMs / 1000)}</div>
+        </summary>
+
+        <div class="history-card-content">
+          <div class="history-half-grid">
+            <div><span>H1</span><strong>${fmtTime(match.halfTimesMs[0] / 1000)}</strong></div>
+            <div><span>H2</span><strong>${fmtTime(match.halfTimesMs[1] / 1000)}</strong></div>
+            <div><span>H3</span><strong>${fmtTime(match.halfTimesMs[2] / 1000)}</strong></div>
+            <div><span>Totalt</span><strong>${fmtTime(match.totalMatchMs / 1000)}</strong></div>
+          </div>
+
+          <div class="history-table-wrap">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>Spelare</th>
+                  <th>H1</th>
+                  <th>H2</th>
+                  <th>H3</th>
+                  <th>Totalt</th>
+                  <th>Bänk</th>
+                  <th>MV</th>
+                </tr>
+              </thead>
+              <tbody>${playerRows}</tbody>
+            </table>
+          </div>
+
+          <div class="history-actions">
+            <button type="button" class="danger-btn compact-btn" data-delete-history="${match.id}">Ta bort match</button>
+          </div>
+        </div>
+      </details>
+    `;
+  }).join("");
+
+  root.querySelectorAll("[data-delete-history]").forEach(btn => {
+    btn.onclick = event => {
+      event.preventDefault();
+      event.stopPropagation();
+      removeHistoryMatch(btn.dataset.deleteHistory);
+    };
+  });
+}
+
+function initHistory() {
+  const saveBtn = document.getElementById("saveMatchBtn");
+  const clearBtn = document.getElementById("clearHistoryBtn");
+
+  if (saveBtn) saveBtn.onclick = saveCurrentMatchToHistory;
+  if (clearBtn) clearBtn.onclick = clearHistory;
+
+  renderHistory();
+}
+
 function setTrainingCategory() {
   document.querySelectorAll(".subtab").forEach(btn => btn.addEventListener("click", () => {
     document.querySelectorAll(".subtab").forEach(b => b.classList.remove("active"));
@@ -1142,6 +1310,7 @@ wireMatchTools();
 wireTrainingTools();
 initStopwatch();
 initPlayerManager();
+initHistory();
 renderExerciseList();
 loadExercise();
 resetMatch();
