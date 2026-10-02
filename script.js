@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.11";
+const APP_VERSION = "v1.6.12";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
