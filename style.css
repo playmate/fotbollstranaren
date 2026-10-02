@@ -879,3 +879,61 @@ button.secondary:hover {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v0.7.1 - training exercise management */
+.training-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.training-controls .subtabs {
+  margin-bottom: 0;
+}
+
+.exercise-list-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px;
+  gap: 6px;
+  align-items: stretch;
+  margin-bottom: 6px;
+}
+
+.exercise-list-row .exercise-item {
+  margin-bottom: 0;
+}
+
+.exercise-remove-btn {
+  padding: 0;
+  min-height: 40px;
+  background: #402525;
+  color: #ffc9c9;
+  border: 1px solid #643535;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.exercise-remove-btn:hover {
+  background: #552d2d;
+}
+
+.exercise-empty {
+  padding: 14px 10px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .training-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  #addExerciseBtn {
+    width: 100%;
+  }
+}
