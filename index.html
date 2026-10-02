@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=0.5.1" />
+  <link rel="stylesheet" href="style.css?v=0.5.2" />
 </head>
 <body>
   <header class="topbar">
@@ -17,7 +17,7 @@
     </div>
     <div id="versionTracker" class="version-tracker" title="Versionsstatus">
       <span class="version-dot"></span>
-      <span id="versionText">Version v0.5.1</span>
+      <span id="versionText">Version v0.5.2</span>
     </div>
   </header>
 
@@ -83,7 +83,7 @@
             <div class="playtime-section playtime-section-visible">
               <div class="playtime-title-row">
                 <div class="roster-heading">Individuell speltid</div>
-                <div class="playtime-sort-note">Minst tid först</div>
+                <div id="playtimeViewLabel" class="playtime-sort-note">Halvlek 1 + totalt</div>
               </div>
               <div id="playtimeStats" class="playtime-stats"></div>
             </div>
@@ -101,28 +101,6 @@
             </div>
           </details>
 
-          <details class="panel collapsible-panel">
-            <summary>Snabbinfo</summary>
-            <div class="collapsible-content">
-              <div id="matchInfo" class="stat-list"></div>
-            </div>
-          </details>
-
-          <details class="panel collapsible-panel">
-            <summary>Spelare</summary>
-            <div class="collapsible-content">
-              <div class="roster-columns">
-                <div>
-                  <div class="roster-heading">På planen</div>
-                  <div id="activePlayersList" class="roster-list"></div>
-                </div>
-                <div>
-                  <div class="roster-heading">Bänk</div>
-                  <div id="benchPlayersList" class="roster-list"></div>
-                </div>
-              </div>
-            </div>
-          </details>
         </aside>
       </div>
     </section>
@@ -230,6 +208,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=0.5.1"></script>
+  <script src="script.js?v=0.5.2"></script>
 </body>
 </html>
