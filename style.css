@@ -937,3 +937,23 @@ button.secondary:hover {
     width: 100%;
   }
 }
+
+
+/* v0.7.2 - bench status + bench time */
+.lineup-status-row {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+}
+
+.lineup-status.on-bench {
+  color: var(--orange) !important;
+}
+
+.lineup-bench-time {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
