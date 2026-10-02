@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.20";
+const APP_VERSION = "v1.6.21";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -2128,15 +2128,17 @@ function fmtDetailedTime(ms) {
 }
 
 function renderHalfTabs() {
-  const root = document.getElementById("halfTabs");
-  if (!root) return;
+  ["halfTabs", "matchBottomHalfTabs"].forEach(rootId => {
+    const root = document.getElementById(rootId);
+    if (!root) return;
 
-  root.innerHTML = getPeriodIndexes().map(index =>
-    `<button class="half-btn${index === currentHalf ? " active" : ""}" data-half="${index}">${index + 1}</button>`
-  ).join("");
+    root.innerHTML = getPeriodIndexes().map(index =>
+      `<button class="half-btn${index === currentHalf ? " active" : ""}" data-half="${index}">${index + 1}</button>`
+    ).join("");
 
-  root.querySelectorAll(".half-btn").forEach(btn => {
-    btn.onclick = () => switchHalf(Number(btn.dataset.half));
+    root.querySelectorAll(".half-btn").forEach(btn => {
+      btn.onclick = () => switchHalf(Number(btn.dataset.half));
+    });
   });
 }
 
