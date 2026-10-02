@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.8.0";
+const APP_VERSION = "v0.8.1";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 let PLAYERS = JSON.parse(localStorage.getItem("fotbollstranaren-players") || "null") || [...DEFAULT_PLAYERS];
@@ -501,7 +501,9 @@ function renderPlaytimeRoster() {
     const selected = player.name === selectedPlaytimePlayer ? " selected" : "";
     const status = player.location === "pitch" ? "På plan" : "På bänken";
     const statusClass = player.location === "pitch" ? "on-pitch" : "on-bench";
-    const role = player.role ? `<span class="lineup-role">${player.role}</span>` : "";
+    const role = player.role
+      ? `<span class="lineup-role ${player.role === "MV" ? "goalkeeper-role" : ""}">${player.role === "MV" ? "Målvakt" : player.role}</span>`
+      : "";
     const benchInfo = player.location === "bench"
       ? `<span class="playtime-bench-detail">${fmtTime(player.benchHalfTime)} på bänk</span>`
       : "";
