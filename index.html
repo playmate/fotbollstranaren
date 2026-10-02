@@ -4,15 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=0.4.0" />
 </head>
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">LAG FÖDDA 2018</div>
       <h1>⚽ Fotbollstränaren</h1>
     </div>
-    <button id="resetAllBtn" class="ghost-btn">Återställ</button>
+    <div class="topbar-actions">
+      <button id="themeToggle" class="ghost-btn">🌙 Mörkt läge</button>
+      <button id="resetAllBtn" class="ghost-btn">Återställ</button>
+    </div>
+    <div id="versionTracker" class="version-tracker" title="Versionsstatus">
+      <span class="version-dot"></span>
+      <span id="versionText">Version v0.4.0</span>
+    </div>
   </header>
 
   <nav class="tabs">
@@ -48,25 +54,58 @@
 
         <aside class="side-panel">
           <div class="panel">
+            <h3>Speltid</h3>
+            <div id="stopwatchDisplay" class="stopwatch-display">00:00</div>
+            <div class="stopwatch-actions">
+              <button id="stopwatchToggle">Starta</button>
+              <button id="stopwatchReset" class="secondary">Nollställ</button>
+            </div>
+          </div>
+
+          <div class="panel">
             <h3>Bänk</h3>
             <div id="bench" class="bench dropzone"></div>
             <div class="hint">Dra en spelare till planen eller tillbaka hit.</div>
           </div>
 
-          <div class="panel">
-            <h3>Verktyg</h3>
-            <div class="tool-grid">
-              <button id="addOpponent">+ Motståndare</button>
-              <button id="addBall">+ Boll</button>
-              <button id="addCone">+ Kona</button>
-              <button id="addCoach">+ Tränare</button>
+          <details class="panel collapsible-panel">
+            <summary>Verktyg</summary>
+            <div class="collapsible-content">
+              <div class="tool-grid">
+                <button id="addOpponent">+ Motståndare</button>
+                <button id="addBall">+ Boll</button>
+                <button id="addCone">+ Kona</button>
+                <button id="addCoach">+ Tränare</button>
+              </div>
             </div>
-          </div>
+          </details>
 
-          <div class="panel">
-            <h3>Snabbinfo</h3>
-            <div id="matchInfo" class="stat-list"></div>
-          </div>
+          <details class="panel collapsible-panel">
+            <summary>Snabbinfo</summary>
+            <div class="collapsible-content">
+              <div id="matchInfo" class="stat-list"></div>
+            </div>
+          </details>
+
+          <details class="panel collapsible-panel">
+            <summary>Spelare</summary>
+            <div class="collapsible-content">
+              <div class="roster-columns">
+                <div>
+                  <div class="roster-heading">På planen</div>
+                  <div id="activePlayersList" class="roster-list"></div>
+                </div>
+                <div>
+                  <div class="roster-heading">Bänk</div>
+                  <div id="benchPlayersList" class="roster-list"></div>
+                </div>
+              </div>
+              <div class="playtime-section">
+                <div class="roster-heading">Individuell speltid</div>
+                <div id="playtimeStats" class="playtime-stats"></div>
+              </div>
+            </div>
+          </details>
         </aside>
       </div>
     </section>
@@ -96,7 +135,7 @@
             <button id="resetExerciseBtn" class="secondary">Återställ övning</button>
           </div>
 
-          <div id="exercisePitch" class="pitch exercise-pitch">
+          <div id="exercisePitch" class="pitch exercise-pitch training-horizontal">
             <div class="half-line"></div>
             <div class="center-circle"></div>
             <div class="goal-area top"></div>
@@ -119,13 +158,13 @@
       <div class="page-title-row">
         <div>
           <h2>Spelare</h2>
-          <p>Laget består just nu av åtta spelare.</p>
+          <p>Översikt över spelare och aktuell speltid.</p>
         </div>
       </div>
       <div id="playerCards" class="player-cards"></div>
     </section>
   </main>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=0.4.0"></script>
 </body>
 </html>
