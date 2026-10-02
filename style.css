@@ -3182,3 +3182,37 @@ button.secondary:hover {
 .match-bench-live-time.bench-time-red {
   color: #d86666;
 }
+
+
+/* v1.6.29 - center bench time and show muted total playtime */
+.lineup-bench .bench-player {
+  grid-template-columns: minmax(0, 1fr) 128px 92px !important;
+  align-items: center;
+}
+
+.match-bench-live-time {
+  justify-self: center;
+  text-align: center;
+  width: 100%;
+}
+
+.match-bench-total-time {
+  justify-self: end;
+  color: var(--muted);
+  opacity: .72;
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .lineup-bench .bench-player {
+    grid-template-columns: minmax(0, 1fr) 118px 78px !important;
+  }
+
+  .match-bench-total-time {
+    font-size: 10px;
+  }
+}
