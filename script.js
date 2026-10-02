@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.25";
+const APP_VERSION = "v1.6.26";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -1035,6 +1035,26 @@ function renderLineupPanel() {
   renderPlaytimeRoster();
 }
 
+async function triggerSubstitutionVibration() {
+  try {
+    const haptics = window.Capacitor?.Plugins?.Haptics;
+    if (haptics?.vibrate) {
+      await haptics.vibrate({ duration: 220 });
+      setTimeout(() => {
+        haptics.vibrate({ duration: 220 }).catch(() => {});
+      }, 320);
+      return { ok: true, mode: "native" };
+    }
+  } catch {}
+
+  if (navigator.vibrate) {
+    const ok = navigator.vibrate([220, 100, 220]);
+    return { ok: Boolean(ok), mode: "web" };
+  }
+
+  return { ok: false, mode: "unsupported" };
+}
+
 function tickPlayerStats(deltaSeconds) {
   if (deltaSeconds <= 0) return;
 
@@ -1053,7 +1073,7 @@ function tickPlayerStats(deltaSeconds) {
       const alertAtSeconds = matchSettings.substitutionMinutes * 60;
       if (name !== keeperName && stats.stintSeconds >= alertAtSeconds && !stats.stintAlerted) {
         stats.stintAlerted = true;
-        if (navigator.vibrate) navigator.vibrate([180, 90, 180]);
+        triggerSubstitutionVibration();
       }
 
       if (name === keeperName) stats.keeperHalves[currentHalf] += deltaSeconds;
@@ -2461,22 +2481,29 @@ function initSettings() {
   const testVibrationBtn = document.getElementById("testVibrationBtn");
   const vibrationTestStatus = document.getElementById("vibrationTestStatus");
   if (testVibrationBtn) {
-    testVibrationBtn.onclick = () => {
-      if (!navigator.vibrate) {
-        if (vibrationTestStatus) {
-          vibrationTestStatus.textContent = "Vibration stöds inte av den här WebView/webbläsaren.";
-          vibrationTestStatus.classList.add("is-error");
-        }
-        return;
+    testVibrationBtn.onclick = async () => {
+      testVibrationBtn.disabled = true;
+      if (vibrationTestStatus) {
+        vibrationTestStatus.textContent = "Testar vibration…";
+        vibrationTestStatus.classList.remove("is-error");
       }
 
-      const accepted = navigator.vibrate([250, 120, 250]);
+      const result = await triggerSubstitutionVibration();
+
       if (vibrationTestStatus) {
-        vibrationTestStatus.textContent = accepted
-          ? "Vibrationssignal skickad."
-          : "Telefonen/WebView nekade vibrationssignalen.";
-        vibrationTestStatus.classList.toggle("is-error", !accepted);
+        if (result.ok && result.mode === "native") {
+          vibrationTestStatus.textContent = "Native vibration skickad via Capacitor Haptics.";
+        } else if (result.ok) {
+          vibrationTestStatus.textContent = "Webbvibration skickad.";
+        } else {
+          vibrationTestStatus.textContent = "Ingen vibrationsfunktion tillgänglig. Installera/synca Capacitor Haptics.";
+          vibrationTestStatus.classList.add("is-error");
+        }
       }
+
+      setTimeout(() => {
+        testVibrationBtn.disabled = false;
+      }, 600);
     };
   }
 
