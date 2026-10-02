@@ -4,17 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=1.6.6" />
+  <link rel="stylesheet" href="style.css?v=1.6.7" />
 </head>
 <body data-theme="dark">
   <div id="appSplash" class="app-splash" aria-hidden="true">
     <div class="splash-logo">
-      <img class="splash-logo-image" src="assets/vaksala-sk-logo-large.png?v=1.6.6" alt="Vaksala SK Uppsala" />
+      <img class="splash-logo-image" src="assets/vaksala-sk-logo-large.png?v=1.6.7" alt="Vaksala SK Uppsala" />
     </div>
   </div>
   <div id="versionTracker" class="version-tracker" title="Versionsstatus">
     <span class="version-dot"></span>
-    <span id="versionText">Version v1.6.6</span>
+    <span id="versionText">Version v1.6.7</span>
   </div>
 
   <nav class="tabs">
@@ -33,15 +33,6 @@
       </div>
 
       <div id="matchActiveContent" hidden>
-      <div class="page-title-row">
-        <div class="actions">
-          <button id="newMatchBtn">Ny match</button>
-          <button id="resetMatchBtn" class="secondary">Återställ plan</button>
-          <button id="clearOppBtn" class="secondary">Rensa motståndare</button>
-          <button id="resetAllBtn" class="secondary">Återställ allt</button>
-        </div>
-      </div>
-
       <div class="match-layout">
         <div class="match-main-column">
           <div class="panel match-scoreboard">
@@ -95,6 +86,13 @@
             <div class="hint">Dra en spelare till planen, eller släpp på en spelare för direkt byte.</div>
           </div>
         </aside>
+      </div>
+
+      <div class="match-bottom-actions">
+        <button id="newMatchBtn">Ny match</button>
+        <button id="resetMatchBtn" class="secondary">Återställ plan</button>
+        <button id="clearOppBtn" class="secondary">Rensa motståndare</button>
+        <button id="resetAllBtn" class="secondary">Återställ allt</button>
       </div>
       </div>
     </section>
@@ -351,6 +349,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=1.6.6"></script>
+  <script src="script.js?v=1.6.7"></script>
 </body>
 </html>
