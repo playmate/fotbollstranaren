@@ -399,6 +399,33 @@ function wireTrainingTools() {
   document.getElementById("exAddCoach").onclick = () => placeToken(pitch, createToken("coach", {name:"Tränare"}), 50, 50);
 }
 
+function applyTheme(theme) {
+  document.body.dataset.theme = theme;
+  const themeToggle = document.getElementById("themeToggle");
+
+  if (themeToggle) {
+    themeToggle.textContent = theme === "dark" ? "☀️ Ljust läge" : "🌙 Mörkt läge";
+  }
+
+  localStorage.setItem("fotbollstranaren-theme", theme);
+}
+
+function initTheme() {
+  const savedTheme = localStorage.getItem("fotbollstranaren-theme");
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const startTheme = savedTheme || (prefersDark ? "dark" : "light");
+
+  applyTheme(startTheme);
+
+  const themeToggle = document.getElementById("themeToggle");
+  if (themeToggle) {
+    themeToggle.onclick = () => {
+      const current = document.body.dataset.theme === "dark" ? "dark" : "light";
+      applyTheme(current === "dark" ? "light" : "dark");
+    };
+  }
+}
+
 document.getElementById("resetAllBtn").onclick = () => {
   resetMatch();
   currentCategory = "passing";
@@ -408,6 +435,7 @@ document.getElementById("resetAllBtn").onclick = () => {
   loadExercise();
 };
 
+initTheme();
 setTabs();
 setTrainingCategory();
 wireMatchTools();
