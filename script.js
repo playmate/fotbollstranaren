@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.23";
+const APP_VERSION = "v1.6.24";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -45,7 +45,8 @@ function createEmptyPlayerStats() {
     benchHalves: makePeriodArray(),
     keeperHalves: makePeriodArray(),
     stintSeconds: 0,
-    benchStintSeconds: 0
+    benchStintSeconds: 0,
+    stintAlerted: false
   };
 }
 
@@ -212,7 +213,8 @@ function saveCurrentMatchState() {
       benchHalves: normalizePeriodArray(playerStats[name]?.benchHalves),
       keeperHalves: normalizePeriodArray(playerStats[name]?.keeperHalves),
       stintSeconds: Number(playerStats[name]?.stintSeconds) || 0,
-      benchStintSeconds: Number(playerStats[name]?.benchStintSeconds) || 0
+      benchStintSeconds: Number(playerStats[name]?.benchStintSeconds) || 0,
+      stintAlerted: Boolean(playerStats[name]?.stintAlerted)
     }])),
     pitchObjects: getPitchState(),
     benchPlayers: [...document.querySelectorAll("#bench .bench-player")].map(el => el.dataset.name)
@@ -267,6 +269,7 @@ function restoreCurrentMatchState() {
     playerStats[name].keeperHalves = normalizePeriodArray(saved.keeperHalves);
     playerStats[name].stintSeconds = Number(saved.stintSeconds) || 0;
     playerStats[name].benchStintSeconds = Number(saved.benchStintSeconds) || 0;
+    playerStats[name].stintAlerted = Boolean(saved.stintAlerted);
   });
 
   pitch.querySelectorAll(".token").forEach(el => el.remove());
@@ -419,6 +422,7 @@ function resetSubstitutionClock(name) {
   if (!playerStats[name]) return;
   playerStats[name].stintSeconds = 0;
   playerStats[name].benchStintSeconds = 0;
+  playerStats[name].stintAlerted = false;
 }
 
 function getLiveStintSeconds(name) {
@@ -1045,6 +1049,13 @@ function tickPlayerStats(deltaSeconds) {
     if (activeNames.has(name)) {
       stats.halves[currentHalf] += deltaSeconds;
       stats.stintSeconds = (Number(stats.stintSeconds) || 0) + deltaSeconds;
+
+      const alertAtSeconds = matchSettings.substitutionMinutes * 60;
+      if (name !== keeperName && stats.stintSeconds >= alertAtSeconds && !stats.stintAlerted) {
+        stats.stintAlerted = true;
+        if (navigator.vibrate) navigator.vibrate([180, 90, 180]);
+      }
+
       if (name === keeperName) stats.keeperHalves[currentHalf] += deltaSeconds;
     } else {
       stats.benchHalves[currentHalf] += deltaSeconds;
