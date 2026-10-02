@@ -2705,3 +2705,43 @@ button.secondary:hover {
     padding-left: 0;
   }
 }
+
+
+/* v1.6.6 - larger play/pause, smaller score controls */
+.match-clock-toggle {
+  width: 42px;
+  height: 38px;
+  font-size: 17px;
+  border-radius: 11px;
+}
+
+.match-scoreboard .score-actions button {
+  min-height: 32px;
+  padding: 6px 10px;
+  font-size: 11px;
+}
+
+.match-scoreboard .score-actions .score-minus {
+  width: 32px;
+  min-width: 32px;
+  padding-inline: 0;
+}
+
+@media (max-width: 640px) {
+  .match-clock-toggle {
+    width: 38px;
+    height: 34px;
+    font-size: 15px;
+  }
+
+  .match-scoreboard .score-actions button {
+    min-height: 30px;
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+
+  .match-scoreboard .score-actions .score-minus {
+    width: 30px;
+    min-width: 30px;
+  }
+}
