@@ -306,3 +306,98 @@ body[data-theme="dark"] .playtime-rank {
   background: #314239;
   color: #edf3ef;
 }
+
+
+/* v0.5.0 - stable bench swap target */
+.bench .bench-player.swap-target {
+  position: static !important;
+  transform: none !important;
+  outline: 3px solid #ffd54a !important;
+  box-shadow:
+    0 0 0 4px rgba(255, 213, 74, .18),
+    0 4px 10px rgba(0,0,0,.16) !important;
+}
+
+body[data-theme="dark"] .bench .bench-player.swap-target {
+  transform: none !important;
+  outline-color: #ffe46b !important;
+  box-shadow:
+    0 0 0 4px rgba(255, 228, 107, .20),
+    0 4px 10px rgba(0,0,0,.28) !important;
+}
+
+/* Statistics */
+.stats-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stats-summary-card {
+  display: grid;
+  gap: 6px;
+}
+
+.stats-summary-card span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.stats-summary-card strong {
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+
+.statistics-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.statistics-table-wrap {
+  overflow-x: auto;
+}
+
+.statistics-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 620px;
+}
+
+.statistics-table th,
+.statistics-table td {
+  padding: 13px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+.statistics-table th {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.statistics-table td:not(:first-child) {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.statistics-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.statistics-status-active {
+  color: var(--accent);
+}
+
+body[data-theme="dark"] .statistics-table tbody tr:hover {
+  background: #202d26;
+}
+
+@media (max-width: 950px) {
+  .stats-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
