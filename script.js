@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.1.0";
+const APP_VERSION = "v1.1.1";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -1674,7 +1674,7 @@ function initSplash() {
   };
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  setTimeout(removeSplash, prefersReducedMotion ? 250 : 1900);
+  setTimeout(removeSplash, prefersReducedMotion ? 250 : 1800);
 }
 
 function initTheme() {
