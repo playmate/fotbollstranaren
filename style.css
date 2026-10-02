@@ -3079,3 +3079,9 @@ button.secondary:hover {
     font-size: 15px;
   }
 }
+
+
+/* v1.6.17 - bench time warning after 5 minutes */
+.match-bench-live-time.is-over-bench-time {
+  color: #ffad3d;
+}
