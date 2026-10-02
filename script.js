@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.3.1";
+const APP_VERSION = "v1.3.2";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -717,6 +717,7 @@ function renderPlaytimeRoster() {
       halfTime: getLivePlayerHalfSeconds(name, currentHalf),
       totalTime: getLivePlayerTotalSeconds(name),
       benchHalfTime: getLivePlayerBenchHalfSeconds(name, currentHalf),
+      keeperTime: getLivePlayerKeeperTotalSeconds(name),
       goals: getGoalCount(name)
     };
   }).sort((a, b) => {
@@ -738,6 +739,9 @@ function renderPlaytimeRoster() {
     const goalsInfo = player.goals > 0
       ? `<span class="playtime-goals">${player.goals} mål</span>`
       : "";
+    const keeperInfo = player.keeperTime > 0
+      ? `<div class="playtime-keeper-time">Tid som målvakt: <strong>${fmtTime(player.keeperTime)}</strong></div>`
+      : "";
 
     return `
       <button type="button" class="playtime-player-row${selected}" data-playtime-player="${player.name}">
@@ -748,6 +752,7 @@ function renderPlaytimeRoster() {
             ${benchInfo}
             ${goalsInfo}
           </div>
+          ${keeperInfo}
         </div>
         <div class="lineup-time">${fmtTime(player.halfTime)}</div>
         <div class="lineup-time">${fmtTime(player.totalTime)}</div>
@@ -768,7 +773,7 @@ function renderSubstitutionSuggestion() {
 
   const active = PLAYERS
     .map(name => ({ name, snapshot: getPlayerSnapshot(name), total: getLivePlayerTotalSeconds(name), bench: getLivePlayerBenchTotalSeconds(name) }))
-    .filter(item => item.snapshot.location === "pitch")
+    .filter(item => item.snapshot.location === "pitch" && item.snapshot.role !== "MV")
     .sort((a,b) => b.total - a.total);
 
   const bench = PLAYERS
@@ -1268,8 +1273,13 @@ function renderPlayerManager() {
     const statusClass = onPitch ? "on-pitch" : "on-bench";
     const playSeconds = getLivePlayerTotalSeconds(name);
     const keeperSeconds = getLivePlayerKeeperTotalSeconds(name);
-    const stintSeconds = onPitch ? getLiveStintSeconds(name) : 0;
-    const timerState = onPitch ? getSubstitutionTimerState(stintSeconds) : "";
+    const isGoalkeeper = getPlayerSnapshot(name).role === "MV";
+    const stintSeconds = onPitch && !isGoalkeeper ? getLiveStintSeconds(name) : 0;
+    const timerState = onPitch && !isGoalkeeper ? getSubstitutionTimerState(stintSeconds) : "";
+    const keeperStat = keeperSeconds > 0 ? `<span>Tid som målvakt <strong>${fmtTime(keeperSeconds)}</strong></span>` : "";
+    const substitutionStat = onPitch && !isGoalkeeper
+      ? `<span class="substitution-clock ${timerState}">Byte <strong>${fmtTime(stintSeconds)} / ${fmtTime(matchSettings.substitutionMinutes * 60)}</strong></span>`
+      : "";
 
     return `
       <div class="player-manager-row">
@@ -1282,8 +1292,8 @@ function renderPlayerManager() {
             </div>
             <div class="player-manager-stats">
               <span>Speltid <strong>${fmtTime(playSeconds)}</strong></span>
-              <span>MV <strong>${fmtTime(keeperSeconds)}</strong></span>
-              ${onPitch ? `<span class="substitution-clock ${timerState}">Byte <strong>${fmtTime(stintSeconds)} / ${fmtTime(matchSettings.substitutionMinutes * 60)}</strong></span>` : ""}
+              ${keeperStat}
+              ${substitutionStat}
             </div>
           </div>
         </div>
