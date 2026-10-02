@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.3.3";
+const APP_VERSION = "v1.4.0";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -1494,13 +1494,13 @@ function renderHistoryPlayerTotals() {
 
   const rows = [...totals.values()].sort((a,b) => b.play - a.play).map(player => `
     <tr>
-      <td><strong>${player.name}</strong></td>
-      <td>${player.matches}</td>
-      <td>${fmtTime(player.play)}</td>
-      <td>${fmtTime(player.matches ? player.play / player.matches : 0)}</td>
-      <td>${fmtTime(player.bench)}</td>
-      <td>${fmtTime(player.keeper)}</td>
-      <td>${player.goals}</td>
+      <td data-sort-value="${player.name}"><strong>${player.name}</strong></td>
+      <td data-sort-value="${player.matches}">${player.matches}</td>
+      <td data-sort-value="${player.play}">${fmtTime(player.play)}</td>
+      <td data-sort-value="${player.matches ? player.play / player.matches : 0}">${fmtTime(player.matches ? player.play / player.matches : 0)}</td>
+      <td data-sort-value="${player.bench}">${fmtTime(player.bench)}</td>
+      <td data-sort-value="${player.keeper}">${fmtTime(player.keeper)}</td>
+      <td data-sort-value="${player.goals}">${player.goals}</td>
     </tr>
   `).join("");
 
@@ -1512,13 +1512,13 @@ function renderHistoryPlayerTotals() {
         <table class="history-table">
           <thead>
             <tr>
-              <th>Spelare</th>
-              <th>Matcher</th>
-              <th>Speltid</th>
-              <th>Snitt</th>
-              <th>Bänk</th>
-              <th>MV</th>
-              <th>Mål</th>
+              <th><button type="button" class="history-sort-btn" data-sort-type="text">Spelare <span>↕</span></button></th>
+              <th><button type="button" class="history-sort-btn" data-sort-type="number">Matcher <span>↕</span></button></th>
+              <th><button type="button" class="history-sort-btn" data-sort-type="number">Speltid <span>↕</span></button></th>
+              <th><button type="button" class="history-sort-btn" data-sort-type="number">Snitt <span>↕</span></button></th>
+              <th><button type="button" class="history-sort-btn" data-sort-type="number">Bänk <span>↕</span></button></th>
+              <th><button type="button" class="history-sort-btn" data-sort-type="number">MV <span>↕</span></button></th>
+              <th><button type="button" class="history-sort-btn" data-sort-type="number">Mål <span>↕</span></button></th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -1526,6 +1526,59 @@ function renderHistoryPlayerTotals() {
       </div>
     </details>
   `;
+}
+
+function wireHistoryTableSorting(scope = document) {
+  const collator = new Intl.Collator("sv", { sensitivity: "base" });
+
+  scope.querySelectorAll(".history-sort-btn").forEach(button => {
+    button.onclick = event => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const table = button.closest("table");
+      const header = button.closest("th");
+      const body = table?.querySelector("tbody");
+      if (!table || !header || !body) return;
+
+      const headers = [...header.parentElement.children];
+      const columnIndex = headers.indexOf(header);
+      const type = button.dataset.sortType || "text";
+      const previousDirection = button.dataset.sortDirection || "";
+      const direction = previousDirection === "asc" ? "desc" : "asc";
+
+      table.querySelectorAll(".history-sort-btn").forEach(other => {
+        other.dataset.sortDirection = "";
+        const icon = other.querySelector("span");
+        if (icon) icon.textContent = "↕";
+        other.classList.remove("active");
+      });
+
+      button.dataset.sortDirection = direction;
+      button.classList.add("active");
+      const icon = button.querySelector("span");
+      if (icon) icon.textContent = direction === "asc" ? "↑" : "↓";
+
+      const rows = [...body.querySelectorAll("tr")];
+      rows.sort((a, b) => {
+        const aCell = a.children[columnIndex];
+        const bCell = b.children[columnIndex];
+        const aRaw = aCell?.dataset.sortValue ?? aCell?.textContent.trim() ?? "";
+        const bRaw = bCell?.dataset.sortValue ?? bCell?.textContent.trim() ?? "";
+
+        let comparison;
+        if (type === "number") {
+          comparison = (Number(aRaw) || 0) - (Number(bRaw) || 0);
+        } else {
+          comparison = collator.compare(aRaw, bRaw);
+        }
+
+        return direction === "asc" ? comparison : -comparison;
+      });
+
+      rows.forEach(row => body.appendChild(row));
+    };
+  });
 }
 
 function renderHistory() {
@@ -1549,12 +1602,12 @@ function renderHistory() {
 
       return `
         <tr>
-          <td><strong>${player.name}</strong></td>
-          ${(player.halves || []).map(value => `<td>${fmtTime(value)}</td>`).join("")}
-          <td>${fmtTime(total)}</td>
-          <td>${fmtTime(benchTotal)}</td>
-          <td>${fmtTime(keeperTotal)}</td>
-          <td>${Number(player.goals) || 0}</td>
+          <td data-sort-value="${player.name}"><strong>${player.name}</strong></td>
+          ${(player.halves || []).map(value => `<td data-sort-value="${Number(value) || 0}">${fmtTime(value)}</td>`).join("")}
+          <td data-sort-value="${total}">${fmtTime(total)}</td>
+          <td data-sort-value="${benchTotal}">${fmtTime(benchTotal)}</td>
+          <td data-sort-value="${keeperTotal}">${fmtTime(keeperTotal)}</td>
+          <td data-sort-value="${Number(player.goals) || 0}">${Number(player.goals) || 0}</td>
         </tr>
       `;
     }).join("");
@@ -1589,12 +1642,12 @@ function renderHistory() {
             <table class="history-table">
               <thead>
                 <tr>
-                  <th>Spelare</th>
-                  ${Array.from({ length: Math.max(...match.players.map(player => player.halves?.length || 0), match.halfTimesMs?.length || 0) }, (_, index) => `<th>${(match.matchSettings?.periodCount || match.halfTimesMs?.length) === 2 ? "H" : "P"}${index + 1}</th>`).join("")}
-                  <th>Totalt</th>
-                  <th>Bänk</th>
-                  <th>MV</th>
-                  <th>Mål</th>
+                  <th><button type="button" class="history-sort-btn" data-sort-type="text">Spelare <span>↕</span></button></th>
+                  ${Array.from({ length: Math.max(...match.players.map(player => player.halves?.length || 0), match.halfTimesMs?.length || 0) }, (_, index) => `<th><button type="button" class="history-sort-btn" data-sort-type="number">${(match.matchSettings?.periodCount || match.halfTimesMs?.length) === 2 ? "H" : "P"}${index + 1} <span>↕</span></button></th>`).join("")}
+                  <th><button type="button" class="history-sort-btn" data-sort-type="number">Totalt <span>↕</span></button></th>
+                  <th><button type="button" class="history-sort-btn" data-sort-type="number">Bänk <span>↕</span></button></th>
+                  <th><button type="button" class="history-sort-btn" data-sort-type="number">MV <span>↕</span></button></th>
+                  <th><button type="button" class="history-sort-btn" data-sort-type="number">Mål <span>↕</span></button></th>
                 </tr>
               </thead>
               <tbody>${playerRows}</tbody>
@@ -1609,6 +1662,8 @@ function renderHistory() {
     `;
   }).join("");
 
+  wireHistoryTableSorting(document.getElementById("history"));
+  
   root.querySelectorAll("[data-delete-history]").forEach(btn => {
     btn.onclick = event => {
       event.preventDefault();
