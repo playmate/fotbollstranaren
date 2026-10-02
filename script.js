@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.4.4";
+const APP_VERSION = "v1.5.0";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -155,16 +155,21 @@ function getOpponentName() {
 }
 
 function updateOpponentLabel() {
-  const label = document.getElementById("opponentNameLabel");
-  if (label) label.textContent = getOpponentName();
+  const opponent = getOpponentName();
+  ["opponentNameLabel", "playtimeOpponentNameLabel"].forEach(id => {
+    const label = document.getElementById(id);
+    if (label) label.textContent = opponent;
+  });
 }
 
 function setMatchActiveUI(active) {
   currentMatchActive = Boolean(active);
   const empty = document.getElementById("matchEmptyState");
   const content = document.getElementById("matchActiveContent");
+  const playtimeBanner = document.getElementById("playtimeMatchBanner");
   if (empty) empty.hidden = currentMatchActive;
   if (content) content.hidden = !currentMatchActive;
+  if (playtimeBanner) playtimeBanner.hidden = !currentMatchActive;
 }
 
 function getGoalCount(name) {
@@ -322,6 +327,8 @@ function setTabs() {
     document.getElementById(btn.dataset.tab).classList.add("active");
     if (btn.dataset.tab === "playtime") {
       renderPlaytimeRoster();
+      updateOpponentLabel();
+      renderMatchScore();
       updateHalfUI();
       updateStopwatchDisplay();
     }
@@ -1032,15 +1039,23 @@ function resetPlayerStats() {
 }
 
 function renderMatchScore() {
-  const home = document.getElementById("homeScore");
-  const away = document.getElementById("awayScore");
-  if (home) home.textContent = String(matchScore.home);
-  if (away) away.textContent = String(matchScore.away);
+  ["homeScore", "playtimeHomeScore"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(matchScore.home);
+  });
+  ["awayScore", "playtimeAwayScore"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(matchScore.away);
+  });
 
-  const homeMinus = document.getElementById("homeGoalMinus");
-  const awayMinus = document.getElementById("awayGoalMinus");
-  if (homeMinus) homeMinus.disabled = matchScore.home <= 0;
-  if (awayMinus) awayMinus.disabled = matchScore.away <= 0;
+  ["homeGoalMinus", "playtimeHomeGoalMinus"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = matchScore.home <= 0;
+  });
+  ["awayGoalMinus", "playtimeAwayGoalMinus"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = matchScore.away <= 0;
+  });
 }
 
 function closeGoalScorerModal() {
@@ -1160,6 +1175,16 @@ function wireMatchTools() {
   document.getElementById("homeGoalMinus").onclick = removeLastHomeGoal;
   document.getElementById("awayGoalPlus").onclick = () => changeAwayScore(1);
   document.getElementById("awayGoalMinus").onclick = () => changeAwayScore(-1);
+
+  const playtimeHomePlus = document.getElementById("playtimeHomeGoalPlus");
+  const playtimeHomeMinus = document.getElementById("playtimeHomeGoalMinus");
+  const playtimeAwayPlus = document.getElementById("playtimeAwayGoalPlus");
+  const playtimeAwayMinus = document.getElementById("playtimeAwayGoalMinus");
+  if (playtimeHomePlus) playtimeHomePlus.onclick = openGoalScorerModal;
+  if (playtimeHomeMinus) playtimeHomeMinus.onclick = removeLastHomeGoal;
+  if (playtimeAwayPlus) playtimeAwayPlus.onclick = () => changeAwayScore(1);
+  if (playtimeAwayMinus) playtimeAwayMinus.onclick = () => changeAwayScore(-1);
+
   document.getElementById("newMatchBtn").onclick = requestNewMatch;
   document.getElementById("startFirstMatchBtn").onclick = requestNewMatch;
 
@@ -1980,19 +2005,21 @@ function updateHalfUI() {
   const label = document.getElementById("halfLabel");
   if (label) label.textContent = `${word} ${currentHalf + 1} av ${matchSettings.periodCount}`;
 
-  const matchBannerPeriod = document.getElementById("matchBannerPeriod");
-  if (matchBannerPeriod) {
-    matchBannerPeriod.textContent = `${word} ${currentHalf + 1}`;
-  }
+  ["matchBannerPeriod", "playtimeBannerPeriod"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = `${word} ${currentHalf + 1}`;
+  });
 
-  const matchBannerLength = document.getElementById("matchBannerLength");
-  if (matchBannerLength) {
-    const unit = matchSettings.periodCount === 2 ? "halvlekar" : "perioder";
-    matchBannerLength.innerHTML = `
-      <span>Matchtid: ${matchSettings.totalMinutes} min</span>
-      <span>${matchSettings.periodCount} ${unit} × ${fmtDetailedTime(getPeriodTargetMs())}</span>
-    `;
-  }
+  const unit = matchSettings.periodCount === 2 ? "halvlekar" : "perioder";
+  ["matchBannerLength", "playtimeBannerLength"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.innerHTML = `
+        <span>Matchtid: ${matchSettings.totalMinutes} min</span>
+        <span>${matchSettings.periodCount} ${unit} × ${fmtDetailedTime(getPeriodTargetMs())}</span>
+      `;
+    }
+  });
 
   const timerLabel = document.getElementById("stopwatchPeriodLabel");
   if (timerLabel) timerLabel.textContent = `Tid i vald ${word.toLowerCase()}`;
@@ -2019,18 +2046,21 @@ function updateStopwatchDisplay() {
 
   if (display) display.textContent = fmtDetailedTime(Math.min(elapsed, target));
 
-  const matchBannerTime = document.getElementById("matchBannerTime");
-  const matchBannerOvertime = document.getElementById("matchBannerOvertime");
   const totalElapsed = getTotalElapsedMs();
   const totalTarget = getMatchTargetMs();
-  if (matchBannerTime) {
-    matchBannerTime.textContent = fmtDetailedTime(Math.min(totalElapsed, totalTarget));
-  }
-  if (matchBannerOvertime) {
-    const totalOvertime = Math.max(0, totalElapsed - totalTarget);
-    matchBannerOvertime.textContent = totalOvertime > 0 ? `Övertid +${fmtDetailedTime(totalOvertime)}` : "";
-    matchBannerOvertime.classList.toggle("active", totalOvertime > 0);
-  }
+  ["matchBannerTime", "playtimeBannerTime"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = fmtDetailedTime(Math.min(totalElapsed, totalTarget));
+  });
+
+  const totalOvertime = Math.max(0, totalElapsed - totalTarget);
+  ["matchBannerOvertime", "playtimeBannerOvertime"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = totalOvertime > 0 ? `Övertid +${fmtDetailedTime(totalOvertime)}` : "";
+      el.classList.toggle("active", totalOvertime > 0);
+    }
+  });
 
   if (overtime) {
     const over = Math.max(0, elapsed - target);
@@ -2065,12 +2095,14 @@ function resumeRunningStopwatch() {
   const stopwatchToggle = document.getElementById("stopwatchToggle");
   if (stopwatchToggle) stopwatchToggle.textContent = "Pausa";
 
-  const matchClockToggle = document.getElementById("matchClockToggle");
-  if (matchClockToggle) {
-    matchClockToggle.textContent = "⏸";
-    matchClockToggle.setAttribute("aria-label", "Pausa matchklockan");
-    matchClockToggle.title = "Pausa matchklockan";
-  }
+  ["matchClockToggle", "playtimeMatchClockToggle"].forEach(id => {
+    const button = document.getElementById(id);
+    if (button) {
+      button.textContent = "⏸";
+      button.setAttribute("aria-label", "Pausa matchklockan");
+      button.title = "Pausa matchklockan";
+    }
+  });
 
   onStopwatchTick();
 }
@@ -2108,12 +2140,14 @@ function pauseStopwatch() {
   clearInterval(stopwatchTimerId);
   stopwatchTimerId = null;
   document.getElementById("stopwatchToggle").textContent = "Starta";
-  const matchClockToggle = document.getElementById("matchClockToggle");
-  if (matchClockToggle) {
-    matchClockToggle.textContent = "▶";
-    matchClockToggle.setAttribute("aria-label", "Starta matchklockan");
-    matchClockToggle.title = "Starta matchklockan";
-  }
+  ["matchClockToggle", "playtimeMatchClockToggle"].forEach(id => {
+    const button = document.getElementById(id);
+    if (button) {
+      button.textContent = "▶";
+      button.setAttribute("aria-label", "Starta matchklockan");
+      button.title = "Starta matchklockan";
+    }
+  });
   updateStopwatchDisplay();
   updatePlaytimeStats();
 }
@@ -2222,10 +2256,10 @@ function initSettings() {
 
 function initStopwatch() {
   document.getElementById("stopwatchToggle").onclick = () => stopwatchStartedAt ? pauseStopwatch() : startStopwatch();
-  const matchClockToggle = document.getElementById("matchClockToggle");
-  if (matchClockToggle) {
-    matchClockToggle.onclick = () => stopwatchStartedAt ? pauseStopwatch() : startStopwatch();
-  }
+  ["matchClockToggle", "playtimeMatchClockToggle"].forEach(id => {
+    const button = document.getElementById(id);
+    if (button) button.onclick = () => stopwatchStartedAt ? pauseStopwatch() : startStopwatch();
+  });
   document.getElementById("stopwatchReset").onclick = () => {
     const word = getPeriodLabelWord().toLowerCase();
     if (!confirm(`Nollställ tiden och statistiken för aktuell ${word}?`)) return;
