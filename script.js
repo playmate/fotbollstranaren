@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.24";
+const APP_VERSION = "v1.6.25";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -2456,6 +2456,28 @@ function initSettings() {
     const saveSubstitution = () => applyMatchSettings({ periodCount: matchSettings.periodCount, totalMinutes: matchSettings.totalMinutes, substitutionMinutes: substitution.value });
     substitution.onchange = saveSubstitution;
     substitution.onblur = saveSubstitution;
+  }
+
+  const testVibrationBtn = document.getElementById("testVibrationBtn");
+  const vibrationTestStatus = document.getElementById("vibrationTestStatus");
+  if (testVibrationBtn) {
+    testVibrationBtn.onclick = () => {
+      if (!navigator.vibrate) {
+        if (vibrationTestStatus) {
+          vibrationTestStatus.textContent = "Vibration stöds inte av den här WebView/webbläsaren.";
+          vibrationTestStatus.classList.add("is-error");
+        }
+        return;
+      }
+
+      const accepted = navigator.vibrate([250, 120, 250]);
+      if (vibrationTestStatus) {
+        vibrationTestStatus.textContent = accepted
+          ? "Vibrationssignal skickad."
+          : "Telefonen/WebView nekade vibrationssignalen.";
+        vibrationTestStatus.classList.toggle("is-error", !accepted);
+      }
+    };
   }
 
   updateSettingsUI();
