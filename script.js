@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.0";
+const APP_VERSION = "v1.6.1";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -44,7 +44,8 @@ function createEmptyPlayerStats() {
     halves: makePeriodArray(),
     benchHalves: makePeriodArray(),
     keeperHalves: makePeriodArray(),
-    stintSeconds: 0
+    stintSeconds: 0,
+    benchStintSeconds: 0
   };
 }
 
@@ -114,6 +115,7 @@ let stopwatchStartedAt = null;
 let stopwatchTimerId = null;
 let stopwatchLastTick = null;
 let selectedPlaytimePlayer = null;
+let currentSubstitutionSuggestion = null;
 let matchScore = { home: 0, away: 0 };
 let goalEvents = [];
 let currentMatchActive = false;
@@ -209,7 +211,8 @@ function saveCurrentMatchState() {
       halves: normalizePeriodArray(playerStats[name]?.halves),
       benchHalves: normalizePeriodArray(playerStats[name]?.benchHalves),
       keeperHalves: normalizePeriodArray(playerStats[name]?.keeperHalves),
-      stintSeconds: Number(playerStats[name]?.stintSeconds) || 0
+      stintSeconds: Number(playerStats[name]?.stintSeconds) || 0,
+      benchStintSeconds: Number(playerStats[name]?.benchStintSeconds) || 0
     }])),
     pitchObjects: getPitchState(),
     benchPlayers: [...document.querySelectorAll("#bench .bench-player")].map(el => el.dataset.name)
@@ -263,6 +266,7 @@ function restoreCurrentMatchState() {
     playerStats[name].benchHalves = normalizePeriodArray(saved.benchHalves);
     playerStats[name].keeperHalves = normalizePeriodArray(saved.keeperHalves);
     playerStats[name].stintSeconds = Number(saved.stintSeconds) || 0;
+    playerStats[name].benchStintSeconds = Number(saved.benchStintSeconds) || 0;
   });
 
   pitch.querySelectorAll(".token").forEach(el => el.remove());
@@ -412,13 +416,22 @@ function setMatchPlayerIndicator(el, indicator, name) {
 }
 
 function resetSubstitutionClock(name) {
-  if (playerStats[name]) playerStats[name].stintSeconds = 0;
+  if (!playerStats[name]) return;
+  playerStats[name].stintSeconds = 0;
+  playerStats[name].benchStintSeconds = 0;
 }
 
 function getLiveStintSeconds(name) {
   const snapshot = getPlayerSnapshot(name);
   const base = Number(playerStats[name]?.stintSeconds) || 0;
   if (!stopwatchStartedAt || !stopwatchLastTick || snapshot.location !== "pitch") return base;
+  return base + ((Date.now() - stopwatchLastTick) / 1000);
+}
+
+function getLiveBenchStintSeconds(name) {
+  const snapshot = getPlayerSnapshot(name);
+  const base = Number(playerStats[name]?.benchStintSeconds) || 0;
+  if (!stopwatchStartedAt || !stopwatchLastTick || snapshot.location !== "bench") return base;
   return base + ((Date.now() - stopwatchLastTick) / 1000);
 }
 
@@ -824,6 +837,7 @@ function renderSubstitutionSuggestion() {
   const root = document.getElementById("substitutionSuggestion");
   if (!root) return;
 
+  const prepThresholdSeconds = 3.5 * 60;
   const substitutionTargetSeconds = matchSettings.substitutionMinutes * 60;
 
   const active = PLAYERS
@@ -831,14 +845,16 @@ function renderSubstitutionSuggestion() {
       name,
       snapshot: getPlayerSnapshot(name),
       total: getLivePlayerTotalSeconds(name),
-      bench: getLivePlayerBenchTotalSeconds(name),
       stint: getLiveStintSeconds(name)
     }))
-    .filter(item => item.snapshot.location === "pitch" && item.snapshot.role !== "MV")
+    .filter(item =>
+      item.snapshot.location === "pitch" &&
+      item.snapshot.role !== "MV" &&
+      item.stint >= prepThresholdSeconds
+    )
     .sort((a, b) => {
       const aOverdue = Math.max(0, a.stint - substitutionTargetSeconds);
       const bOverdue = Math.max(0, b.stint - substitutionTargetSeconds);
-
       if (aOverdue !== bOverdue) return bOverdue - aOverdue;
       if (a.stint !== b.stint) return b.stint - a.stint;
       return b.total - a.total;
@@ -849,18 +865,40 @@ function renderSubstitutionSuggestion() {
       name,
       snapshot: getPlayerSnapshot(name),
       total: getLivePlayerTotalSeconds(name),
-      bench: getLivePlayerBenchTotalSeconds(name)
+      benchStint: getLiveBenchStintSeconds(name)
     }))
-    .filter(item => item.snapshot.location === "bench")
-    .sort((a,b) => b.bench - a.bench || a.total - b.total);
+    .filter(item =>
+      item.snapshot.location === "bench" &&
+      item.benchStint >= prepThresholdSeconds
+    )
+    .sort((a, b) => {
+      if (a.benchStint !== b.benchStint) return b.benchStint - a.benchStint;
+      return a.total - b.total;
+    });
 
   if (!active.length || !bench.length) {
+    currentSubstitutionSuggestion = null;
     root.innerHTML = "";
     return;
   }
 
-  const outgoing = active[0];
-  const incoming = bench[0];
+  const stickyOutgoing = currentSubstitutionSuggestion
+    ? active.find(item => item.name === currentSubstitutionSuggestion.outgoing)
+    : null;
+  const stickyIncoming = currentSubstitutionSuggestion
+    ? bench.find(item => item.name === currentSubstitutionSuggestion.incoming)
+    : null;
+
+  const outgoing = stickyOutgoing || active[0];
+  const incoming = stickyIncoming || bench[0];
+
+  if (!stickyOutgoing || !stickyIncoming) {
+    currentSubstitutionSuggestion = {
+      outgoing: outgoing.name,
+      incoming: incoming.name
+    };
+  }
+
   const overdueBy = Math.max(0, outgoing.stint - substitutionTargetSeconds);
   const reason = overdueBy > 0
     ? ` · ${fmtTime(overdueBy)} över byteslängd`
@@ -870,7 +908,7 @@ function renderSubstitutionSuggestion() {
     <div>
       <span>Bytesförslag</span>
       <strong>${incoming.name} in · ${outgoing.name} ut</strong>
-      <small class="substitution-reason">Tid sedan byte: ${fmtTime(outgoing.stint)} / ${fmtTime(substitutionTargetSeconds)}${reason}</small>
+      <small class="substitution-reason">På plan: ${fmtTime(outgoing.stint)} · På bänk: ${fmtTime(incoming.benchStint)}${reason}</small>
     </div>
     <button type="button" class="secondary compact-btn" id="selectSuggestionBtn">Markera</button>
   `;
@@ -981,6 +1019,7 @@ function tickPlayerStats(deltaSeconds) {
       if (name === keeperName) stats.keeperHalves[currentHalf] += deltaSeconds;
     } else {
       stats.benchHalves[currentHalf] += deltaSeconds;
+      stats.benchStintSeconds = (Number(stats.benchStintSeconds) || 0) + deltaSeconds;
     }
   });
 }
@@ -1066,6 +1105,7 @@ function resetPlayerStats() {
     playerStats[name].benchHalves = makePeriodArray();
     playerStats[name].keeperHalves = makePeriodArray();
     playerStats[name].stintSeconds = 0;
+    playerStats[name].benchStintSeconds = 0;
   });
   updatePlaytimeStats();
 }
@@ -1308,6 +1348,7 @@ function beginNewMatch(opponentName) {
 
   currentMatchActive = true;
   selectedPlaytimePlayer = null;
+  currentSubstitutionSuggestion = null;
   resetMatchScore();
   halfElapsedMs = makePeriodArray();
   currentHalf = 0;
