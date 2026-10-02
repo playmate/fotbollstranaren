@@ -2912,3 +2912,20 @@ button.secondary:hover {
     margin: 8px auto 0;
   }
 }
+
+
+/* v1.6.12 - destructive reset button */
+.danger-btn {
+  background: #b93232;
+  border-color: #cf4747;
+  color: #fff;
+}
+
+.danger-btn:hover {
+  background: #c83d3d;
+  border-color: #dd5454;
+}
+
+.danger-btn:active {
+  background: #a92a2a;
+}
