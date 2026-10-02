@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.14";
+const APP_VERSION = "v1.6.15";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -712,7 +712,11 @@ function renderMatchBench() {
   const count = document.getElementById("matchBenchCount");
   if (!bench) return;
 
-  const benchPlayers = [...bench.querySelectorAll('.bench-player')];
+  const benchPlayers = [...bench.querySelectorAll('.bench-player')]
+    .sort((a, b) => getLiveBenchStintSeconds(b.dataset.name) - getLiveBenchStintSeconds(a.dataset.name));
+
+  benchPlayers.forEach(el => bench.appendChild(el));
+
   if (count) count.textContent = `${benchPlayers.length} på bänken`;
 
   benchPlayers.forEach(el => {
@@ -1557,7 +1561,10 @@ function initPlayerManager() {
 function updateMatchPitchAndBenchTimes() {
   document.querySelectorAll('#matchPitch .player-token:not(.opponent):not(.coach)').forEach(el => {
     const time = el.querySelector(".match-player-live-time");
-    if (time && el.dataset.name) time.textContent = fmtTime(getLivePlayerTotalSeconds(el.dataset.name));
+    if (time && el.dataset.name) {
+      time.textContent = fmtTime(getLivePlayerTotalSeconds(el.dataset.name));
+      time.classList.toggle("is-over-substitution-time", getLiveStintSeconds(el.dataset.name) >= (5 * 60));
+    }
   });
 
   document.querySelectorAll('#bench .bench-player').forEach(el => {
