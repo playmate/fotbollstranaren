@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.4.3";
+const APP_VERSION = "v1.4.4";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -1148,7 +1148,10 @@ function resetMatch() {
 
 function wireMatchTools() {
   const pitch = document.getElementById("matchPitch");
-  document.getElementById("resetMatchBtn").onclick = resetMatch;
+  document.getElementById("resetMatchBtn").onclick = () => {
+    if (!confirm("Återställ planen till standarduppställningen?")) return;
+    resetMatch();
+  };
   document.getElementById("clearOppBtn").onclick = () => {
     pitch.querySelectorAll(".opponent").forEach(x => x.remove());
     updateMatchInfo();
@@ -1913,7 +1916,10 @@ function wireTrainingTools() {
   const pitch = document.getElementById("exercisePitch");
 
   document.getElementById("addExerciseBtn").onclick = addExercise;
-  document.getElementById("resetExerciseBtn").onclick = loadExercise;
+  document.getElementById("resetExerciseBtn").onclick = () => {
+    if (!confirm("Återställ övningen till sitt ursprungliga läge?")) return;
+    loadExercise();
+  };
 
   document.getElementById("exAddPlayer").onclick = () => {
     placeToken(pitch, createToken("player", {name:"Spelare"}), 50, 70);
@@ -2220,7 +2226,11 @@ function initStopwatch() {
   if (matchClockToggle) {
     matchClockToggle.onclick = () => stopwatchStartedAt ? pauseStopwatch() : startStopwatch();
   }
-  document.getElementById("stopwatchReset").onclick = resetCurrentHalf;
+  document.getElementById("stopwatchReset").onclick = () => {
+    const word = getPeriodLabelWord().toLowerCase();
+    if (!confirm(`Nollställ tiden och statistiken för aktuell ${word}?`)) return;
+    resetCurrentHalf();
+  };
   document.getElementById("clearPlaytimeSelection").onclick = clearPlaytimePlayerSelection;
   updateHalfUI();
   updateStopwatchDisplay();
