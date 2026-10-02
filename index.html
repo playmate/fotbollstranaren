@@ -4,17 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=1.6.24" />
+  <link rel="stylesheet" href="style.css?v=1.6.25" />
 </head>
 <body data-theme="dark">
   <div id="appSplash" class="app-splash" aria-hidden="true">
     <div class="splash-logo">
-      <img class="splash-logo-image" src="assets/vaksala-sk-logo-large.png?v=1.6.24" alt="Vaksala SK Uppsala" />
+      <img class="splash-logo-image" src="assets/vaksala-sk-logo-large.png?v=1.6.25" alt="Vaksala SK Uppsala" />
     </div>
   </div>
   <div id="versionTracker" class="version-tracker" title="Versionsstatus">
     <span class="version-dot"></span>
-    <span id="versionText">Version v1.6.24</span>
+    <span id="versionText">Version v1.6.25</span>
   </div>
 
   <nav class="tabs">
@@ -263,6 +263,15 @@
           </label>
 
           <p class="settings-note">Tiden delas automatiskt lika mellan alla halvlekar/perioder. Byteslängden används för att markera när en spelare varit inne länge utan byte.</p>
+
+          <div class="settings-vibration-test">
+            <div>
+              <strong>Vibration</strong>
+              <span>Testa om telefonen tillåter vibrationssignalen som används vid bytesvarningen.</span>
+            </div>
+            <button id="testVibrationBtn" class="secondary" type="button">Testa vibration</button>
+            <small id="vibrationTestStatus" class="settings-vibration-status" aria-live="polite"></small>
+          </div>
         </div>
 
         <div class="panel data-tools-panel settings-backup-panel">
@@ -355,6 +364,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=1.6.24"></script>
+  <script src="script.js?v=1.6.25"></script>
 </body>
 </html>
