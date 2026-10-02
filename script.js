@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.1.1";
+const APP_VERSION = "v1.1.2";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -1714,6 +1714,11 @@ function updateHalfUI() {
   const label = document.getElementById("halfLabel");
   if (label) label.textContent = `${word} ${currentHalf + 1} av ${matchSettings.periodCount}`;
 
+  const matchBannerPeriod = document.getElementById("matchBannerPeriod");
+  if (matchBannerPeriod) {
+    matchBannerPeriod.textContent = `${word} ${currentHalf + 1}/${matchSettings.periodCount}`;
+  }
+
   const timerLabel = document.getElementById("stopwatchPeriodLabel");
   if (timerLabel) timerLabel.textContent = `Tid i vald ${word.toLowerCase()}`;
 
@@ -1738,6 +1743,19 @@ function updateStopwatchDisplay() {
   const overtime = document.getElementById("overtimeDisplay");
 
   if (display) display.textContent = fmtDetailedTime(Math.min(elapsed, target));
+
+  const matchBannerTime = document.getElementById("matchBannerTime");
+  const matchBannerOvertime = document.getElementById("matchBannerOvertime");
+  const totalElapsed = getTotalElapsedMs();
+  const totalTarget = getMatchTargetMs();
+  if (matchBannerTime) {
+    matchBannerTime.textContent = `${fmtDetailedTime(Math.min(totalElapsed, totalTarget))} / ${fmtDetailedTime(totalTarget)}`;
+  }
+  if (matchBannerOvertime) {
+    const totalOvertime = Math.max(0, totalElapsed - totalTarget);
+    matchBannerOvertime.textContent = totalOvertime > 0 ? `Övertid +${fmtDetailedTime(totalOvertime)}` : "";
+    matchBannerOvertime.classList.toggle("active", totalOvertime > 0);
+  }
 
   if (overtime) {
     const over = Math.max(0, elapsed - target);
