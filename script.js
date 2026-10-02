@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.3.0";
+const APP_VERSION = "v1.3.1";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -1871,7 +1871,12 @@ function updateHalfUI() {
 
   const matchBannerPeriod = document.getElementById("matchBannerPeriod");
   if (matchBannerPeriod) {
-    matchBannerPeriod.textContent = `${word} ${currentHalf + 1}/${matchSettings.periodCount}`;
+    matchBannerPeriod.textContent = `${word} ${currentHalf + 1}`;
+  }
+
+  const matchBannerLength = document.getElementById("matchBannerLength");
+  if (matchBannerLength) {
+    matchBannerLength.textContent = `Matchlängd: ${matchSettings.totalMinutes} min`;
   }
 
   const timerLabel = document.getElementById("stopwatchPeriodLabel");
@@ -1904,7 +1909,7 @@ function updateStopwatchDisplay() {
   const totalElapsed = getTotalElapsedMs();
   const totalTarget = getMatchTargetMs();
   if (matchBannerTime) {
-    matchBannerTime.textContent = `${fmtDetailedTime(Math.min(totalElapsed, totalTarget))} / ${fmtDetailedTime(totalTarget)}`;
+    matchBannerTime.textContent = fmtDetailedTime(Math.min(totalElapsed, totalTarget));
   }
   if (matchBannerOvertime) {
     const totalOvertime = Math.max(0, totalElapsed - totalTarget);
@@ -1947,6 +1952,12 @@ function startStopwatch() {
   stopwatchLastTick = stopwatchStartedAt;
   stopwatchTimerId = setInterval(onStopwatchTick, 250);
   document.getElementById("stopwatchToggle").textContent = "Pausa";
+  const matchClockToggle = document.getElementById("matchClockToggle");
+  if (matchClockToggle) {
+    matchClockToggle.textContent = "⏸";
+    matchClockToggle.setAttribute("aria-label", "Pausa matchklockan");
+    matchClockToggle.title = "Pausa matchklockan";
+  }
   updateStopwatchDisplay();
 }
 
@@ -1961,6 +1972,12 @@ function pauseStopwatch() {
   clearInterval(stopwatchTimerId);
   stopwatchTimerId = null;
   document.getElementById("stopwatchToggle").textContent = "Starta";
+  const matchClockToggle = document.getElementById("matchClockToggle");
+  if (matchClockToggle) {
+    matchClockToggle.textContent = "▶";
+    matchClockToggle.setAttribute("aria-label", "Starta matchklockan");
+    matchClockToggle.title = "Starta matchklockan";
+  }
   updateStopwatchDisplay();
   updatePlaytimeStats();
 }
@@ -2069,6 +2086,10 @@ function initSettings() {
 
 function initStopwatch() {
   document.getElementById("stopwatchToggle").onclick = () => stopwatchStartedAt ? pauseStopwatch() : startStopwatch();
+  const matchClockToggle = document.getElementById("matchClockToggle");
+  if (matchClockToggle) {
+    matchClockToggle.onclick = () => stopwatchStartedAt ? pauseStopwatch() : startStopwatch();
+  }
   document.getElementById("stopwatchReset").onclick = resetCurrentHalf;
   document.getElementById("clearPlaytimeSelection").onclick = clearPlaytimePlayerSelection;
   updateHalfUI();
