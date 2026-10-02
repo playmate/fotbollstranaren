@@ -2381,3 +2381,76 @@ button.secondary:hover {
 .match-banner-length span:last-child {
   opacity: .82;
 }
+
+
+/* v1.4.3 - grouped playtime roster */
+.playtime-click-roster {
+  gap: 12px;
+}
+
+.playtime-group-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #18231d;
+}
+
+.playtime-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  background: #1b2922;
+}
+
+.playtime-group-head h4 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.playtime-group-head span {
+  min-width: 24px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #26372e;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.playtime-group-list {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.playtime-group-card .playtime-player-row {
+  margin: 0;
+}
+
+.playtime-group-keeper {
+  border-color: #6f6333;
+}
+
+.playtime-group-keeper .playtime-group-head {
+  background: #2d2918;
+}
+
+.playtime-group-keeper .playtime-group-head h4 {
+  color: #e9d37c;
+}
+
+.playtime-group-bench .playtime-group-head h4 {
+  color: var(--orange);
+}
+
+.playtime-group-empty {
+  padding: 10px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
