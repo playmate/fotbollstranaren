@@ -482,3 +482,46 @@ body[data-theme="dark"] .match-player-name {
   background: rgba(20, 24, 22, 0.95);
   color: #edf3ef;
 }
+
+
+.version-tracker {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.92);
+  color: #183023;
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 20px rgba(0,0,0,.12);
+  font-size: 12px;
+  font-weight: 800;
+  backdrop-filter: blur(8px);
+}
+
+.version-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #f3b23f;
+  box-shadow: 0 0 0 3px rgba(243,178,63,.16);
+}
+
+.version-tracker.is-current .version-dot {
+  background: #2e9d5b;
+  box-shadow: 0 0 0 3px rgba(46,157,91,.16);
+}
+
+.version-tracker.is-stale .version-dot {
+  background: #d9534f;
+  box-shadow: 0 0 0 3px rgba(217,83,79,.16);
+}
+
+body[data-theme="dark"] .version-tracker {
+  background: rgba(24,32,28,.94);
+  color: #edf3ef;
+}
