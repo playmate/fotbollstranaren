@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.28";
+const APP_VERSION = "v1.6.29";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -724,12 +724,16 @@ function renderMatchBench() {
   if (count) count.textContent = `${benchPlayers.length} på bänken`;
 
   benchPlayers.forEach(el => {
+    const benchSeconds = getLiveBenchStintSeconds(el.dataset.name);
+    const totalSeconds = getLivePlayerTotalSeconds(el.dataset.name);
+
     el.innerHTML = `
       <div class="match-bench-player-info">
         <strong>${el.dataset.name}</strong>
         <span class="lineup-status on-bench">På bänken</span>
       </div>
-      <span class="match-bench-live-time" data-bench-time-for="${el.dataset.name}">Bänktid ${fmtTime(getLiveBenchStintSeconds(el.dataset.name))}</span>
+      <span class="match-bench-live-time" data-bench-time-for="${el.dataset.name}">Bänktid ${fmtTime(benchSeconds)}</span>
+      <span class="match-bench-total-time">Totalt ${fmtTime(totalSeconds)}</span>
     `;
   });
 }
@@ -1621,11 +1625,15 @@ function updateMatchPitchAndBenchTimes() {
 
   document.querySelectorAll('#bench .bench-player').forEach(el => {
     const time = el.querySelector(".match-bench-live-time");
+    const total = el.querySelector(".match-bench-total-time");
     if (time && el.dataset.name) {
       const benchSeconds = getLiveBenchStintSeconds(el.dataset.name);
       time.textContent = `Bänktid ${fmtTime(benchSeconds)}`;
       time.classList.toggle("bench-time-orange", benchSeconds >= (5 * 60) && benchSeconds < (6.5 * 60));
       time.classList.toggle("bench-time-red", benchSeconds >= (6.5 * 60));
+    }
+    if (total && el.dataset.name) {
+      total.textContent = `Totalt ${fmtTime(getLivePlayerTotalSeconds(el.dataset.name))}`;
     }
   });
 }
