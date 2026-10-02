@@ -4,27 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=0.6.1" />
+  <link rel="stylesheet" href="style.css?v=0.7.0" />
 </head>
 <body data-theme="dark">
-  <header class="topbar">
-    <div>
-      <h1>⚽ Fotbollstränaren</h1>
-    </div>
-    <div class="topbar-actions">
-      <button id="resetAllBtn" class="ghost-btn">Återställ</button>
-    </div>
-    <div id="versionTracker" class="version-tracker" title="Versionsstatus">
-      <span class="version-dot"></span>
-      <span id="versionText">Version v0.6.1</span>
-    </div>
-  </header>
+  <div id="versionTracker" class="version-tracker" title="Versionsstatus">
+    <span class="version-dot"></span>
+    <span id="versionText">Version v0.7.0</span>
+  </div>
 
   <nav class="tabs">
     <button class="tab active" data-tab="match">Match</button>
     <button class="tab" data-tab="training">Träning</button>
     <button class="tab" data-tab="players">Spelare</button>
-    <button class="tab" data-tab="statistics">Statistik</button>
   </nav>
 
   <main>
@@ -37,6 +28,7 @@
         <div class="actions">
           <button id="resetMatchBtn">Återställ plan</button>
           <button id="clearOppBtn" class="secondary">Rensa motståndare</button>
+          <button id="resetAllBtn" class="secondary">Återställ allt</button>
         </div>
       </div>
 
@@ -140,61 +132,34 @@
       <div class="page-title-row">
         <div>
           <h2>Spelare</h2>
-          <p>Översikt över spelare och aktuell speltid.</p>
-        </div>
-      </div>
-      <div id="playerCards" class="player-cards"></div>
-    </section>
-
-    <section id="statistics" class="page">
-      <div class="page-title-row">
-        <div>
-          <h2>Statistik</h2>
-          <p>Speltid per halvlek och totalt. Minst total speltid visas först.</p>
+          <p>Hantera truppen. Nya spelare läggs direkt på bänken i Match-vyn.</p>
         </div>
       </div>
 
-      <div class="stats-summary-grid">
-        <div class="panel stats-summary-card">
-          <span>Halvlek 1</span>
-          <strong id="statsHalf1">00:00</strong>
+      <div class="player-manager-layout">
+        <div class="panel player-add-panel">
+          <h3>Lägg till spelare</h3>
+          <form id="addPlayerForm" class="add-player-form">
+            <input id="newPlayerName" type="text" maxlength="24" placeholder="Spelarens namn" autocomplete="off" />
+            <button type="submit">Lägg till</button>
+          </form>
+          <div id="playerFormMessage" class="player-form-message"></div>
         </div>
-        <div class="panel stats-summary-card">
-          <span>Halvlek 2</span>
-          <strong id="statsHalf2">00:00</strong>
-        </div>
-        <div class="panel stats-summary-card">
-          <span>Halvlek 3</span>
-          <strong id="statsHalf3">00:00</strong>
-        </div>
-        <div class="panel stats-summary-card">
-          <span>Total matchtid</span>
-          <strong id="statsMatchTotal">00:00</strong>
-        </div>
-      </div>
 
-      <div class="panel statistics-panel">
-        <div class="statistics-table-wrap">
-          <table class="statistics-table">
-            <thead>
-              <tr>
-                <th>Spelare</th>
-                <th>H1</th>
-                <th>H2</th>
-                <th>H3</th>
-                <th>Totalt</th>
-                <th>Bänk</th>
-                <th>MV</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="statisticsBody"></tbody>
-          </table>
+        <div class="panel player-roster-panel">
+          <div class="player-roster-head">
+            <div>
+              <h3>Aktuella spelare</h3>
+              <p><span id="playerCount">0</span> spelare i truppen</p>
+            </div>
+          </div>
+          <div id="playerManagerList" class="player-manager-list"></div>
         </div>
       </div>
     </section>
+
   </main>
 
-  <script src="script.js?v=0.6.1"></script>
+  <script src="script.js?v=0.7.0"></script>
 </body>
 </html>
