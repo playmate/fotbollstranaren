@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.12";
+const APP_VERSION = "v1.6.13";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -351,7 +351,7 @@ function createToken(type, opts = {}) {
     el.dataset.name = opts.name || "Spelare";
     if (opts.indicator) {
       el.dataset.indicator = opts.indicator;
-      el.innerHTML = `<span class="match-indicator">${opts.indicator}</span>${opts.opponent ? "" : `<span class="match-player-name">${opts.name || "Spelare"}</span>`}`;
+      el.innerHTML = `<span class="match-indicator">${opts.indicator}</span>${opts.opponent ? "" : `<span class="match-player-name">${opts.name || "Spelare"}</span><span class="match-player-live-time">${fmtTime(getLivePlayerTotalSeconds(opts.name || "Spelare"))}</span>`}`;
     } else {
       el.textContent = opts.name || "Spelare";
     }
@@ -412,7 +412,7 @@ function getNextOwnIndicator() {
 function setMatchPlayerIndicator(el, indicator, name) {
   el.dataset.indicator = indicator;
   el.dataset.name = name;
-  el.innerHTML = `<span class="match-indicator">${indicator}</span><span class="match-player-name">${name}</span>`;
+  el.innerHTML = `<span class="match-indicator">${indicator}</span><span class="match-player-name">${name}</span><span class="match-player-live-time">${fmtTime(getLivePlayerTotalSeconds(name))}</span>`;
 }
 
 function resetSubstitutionClock(name) {
@@ -721,6 +721,7 @@ function renderMatchBench() {
         <strong>${el.dataset.name}</strong>
         <span class="lineup-status on-bench">På bänken</span>
       </div>
+      <span class="match-bench-live-time" data-bench-time-for="${el.dataset.name}">Bänktid ${fmtTime(getLiveBenchStintSeconds(el.dataset.name))}</span>
     `;
   });
 }
@@ -1536,8 +1537,21 @@ function initPlayerManager() {
   renderPlayerManager();
 }
 
+function updateMatchPitchAndBenchTimes() {
+  document.querySelectorAll('#matchPitch .player-token:not(.opponent):not(.coach)').forEach(el => {
+    const time = el.querySelector(".match-player-live-time");
+    if (time && el.dataset.name) time.textContent = fmtTime(getLivePlayerTotalSeconds(el.dataset.name));
+  });
+
+  document.querySelectorAll('#bench .bench-player').forEach(el => {
+    const time = el.querySelector(".match-bench-live-time");
+    if (time && el.dataset.name) time.textContent = `Bänktid ${fmtTime(getLiveBenchStintSeconds(el.dataset.name))}`;
+  });
+}
+
 function updatePlayerCardsTimes() {
   renderPlayerManager();
+  updateMatchPitchAndBenchTimes();
 }
 
 function getLiveHalfElapsedMs(index) {
