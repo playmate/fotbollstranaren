@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.3.6";
+const APP_VERSION = "v0.3.7";
 
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
@@ -223,16 +223,20 @@ function placeFromPointer(container, el, clientX, clientY) {
 
 function makeDraggable(el) {
   el.addEventListener("pointerdown", e => {
-    if (el.parentElement?.id === "bench") return;
-
     e.preventDefault();
 
     const originParent = el.parentElement;
-    if (!originParent || !originParent.classList.contains("pitch")) return;
+    const fromBench = originParent?.id === "bench";
+    const fromPitch = originParent?.classList.contains("pitch");
+
+    if (!fromBench && !fromPitch) return;
+    if (fromBench && el.dataset.type !== "player") return;
 
     const originLeft = el.style.left;
     const originTop = el.style.top;
     const tokenRect = el.getBoundingClientRect();
+    const matchPitch = document.getElementById("matchPitch");
+    const bench = document.getElementById("bench");
 
     el.classList.add("dragging", "dragging-floating");
     el.style.width = `${tokenRect.width}px`;
@@ -246,6 +250,23 @@ function makeDraggable(el) {
       el.style.top = `${ev.clientY}px`;
     };
 
+    const restoreToOrigin = () => {
+      el.classList.remove("dragging", "dragging-floating");
+      el.style.width = "";
+      el.style.height = "";
+
+      originParent.appendChild(el);
+
+      if (fromBench) {
+        el.classList.add("bench-player");
+        el.style.left = "";
+        el.style.top = "";
+      } else {
+        el.style.left = originLeft;
+        el.style.top = originTop;
+      }
+    };
+
     const finish = ev => {
       document.removeEventListener("pointermove", move);
       document.removeEventListener("pointerup", finish);
@@ -255,8 +276,29 @@ function makeDraggable(el) {
       el.style.width = "";
       el.style.height = "";
 
-      const matchPitch = document.getElementById("matchPitch");
-      const bench = document.getElementById("bench");
+      if (fromBench) {
+        if (pointInside(matchPitch.getBoundingClientRect(), ev.clientX, ev.clientY)) {
+          const playerCount = matchPitch.querySelectorAll('.player-token:not(.opponent):not(.coach)').length;
+
+          if (playerCount >= 5) {
+            restoreToOrigin();
+            alert("Det är redan 5 egna spelare på planen. Flytta först en spelare till bänken.");
+            updateMatchInfo();
+            return;
+          }
+
+          const indicator = getNextOwnIndicator();
+          setMatchPlayerIndicator(el, indicator, el.dataset.name);
+          placeFromPointer(matchPitch, el, ev.clientX, ev.clientY);
+          updateMatchInfo();
+          return;
+        }
+
+        restoreToOrigin();
+        updateMatchInfo();
+        return;
+      }
+
       const canGoToBench =
         originParent.id === "matchPitch" &&
         el.dataset.type === "player" &&
@@ -286,12 +328,8 @@ function makeDraggable(el) {
       document.removeEventListener("pointermove", move);
       document.removeEventListener("pointerup", finish);
       document.removeEventListener("pointercancel", cancel);
-      el.classList.remove("dragging", "dragging-floating");
-      el.style.width = "";
-      el.style.height = "";
-      originParent.appendChild(el);
-      el.style.left = originLeft;
-      el.style.top = originTop;
+      restoreToOrigin();
+      updateMatchInfo();
     };
 
     document.addEventListener("pointermove", move);
