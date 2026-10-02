@@ -2310,12 +2310,16 @@ function applyMatchSettings(nextSettings) {
 }
 
 function updateSettingsUI() {
-  const count = document.getElementById("periodCountSetting");
+  const countValue = document.getElementById("periodCountValue");
+  const minus = document.getElementById("periodCountMinus");
+  const plus = document.getElementById("periodCountPlus");
   const minutes = document.getElementById("matchMinutesSetting");
   const summary = document.getElementById("periodLengthSummary");
   const substitution = document.getElementById("substitutionMinutesSetting");
 
-  if (count) count.value = String(matchSettings.periodCount);
+  if (countValue) countValue.textContent = String(matchSettings.periodCount);
+  if (minus) minus.disabled = matchSettings.periodCount <= 1;
+  if (plus) plus.disabled = matchSettings.periodCount >= 6;
   if (minutes) minutes.value = String(matchSettings.totalMinutes);
   if (substitution) substitution.value = String(matchSettings.substitutionMinutes);
   if (summary) summary.textContent = fmtDetailedTime(getPeriodTargetMs());
@@ -2323,11 +2327,27 @@ function updateSettingsUI() {
 }
 
 function initSettings() {
-  const count = document.getElementById("periodCountSetting");
+  const minus = document.getElementById("periodCountMinus");
+  const plus = document.getElementById("periodCountPlus");
   const minutes = document.getElementById("matchMinutesSetting");
   const substitution = document.getElementById("substitutionMinutesSetting");
 
-  if (count) count.onchange = () => applyMatchSettings({ periodCount: count.value, totalMinutes: matchSettings.totalMinutes, substitutionMinutes: matchSettings.substitutionMinutes });
+  if (minus) {
+    minus.onclick = () => applyMatchSettings({
+      periodCount: matchSettings.periodCount - 1,
+      totalMinutes: matchSettings.totalMinutes,
+      substitutionMinutes: matchSettings.substitutionMinutes
+    });
+  }
+
+  if (plus) {
+    plus.onclick = () => applyMatchSettings({
+      periodCount: matchSettings.periodCount + 1,
+      totalMinutes: matchSettings.totalMinutes,
+      substitutionMinutes: matchSettings.substitutionMinutes
+    });
+  }
+
   if (minutes) {
     const saveMinutes = () => applyMatchSettings({ periodCount: matchSettings.periodCount, totalMinutes: minutes.value, substitutionMinutes: matchSettings.substitutionMinutes });
     minutes.onchange = saveMinutes;
