@@ -1,15 +1,48 @@
-const APP_VERSION = "v1.0.3";
+const APP_VERSION = "v1.1.0";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
+const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
+const DEFAULT_MATCH_SETTINGS = { periodCount: 2, totalMinutes: 30 };
+let matchSettings = { ...DEFAULT_MATCH_SETTINGS, ...(JSON.parse(localStorage.getItem(MATCH_SETTINGS_KEY) || "null") || {}) };
+matchSettings.periodCount = Math.max(1, Math.min(6, Number(matchSettings.periodCount) || 2));
+matchSettings.totalMinutes = Math.max(5, Math.min(180, Number(matchSettings.totalMinutes) || 30));
+
+function getPeriodIndexes() {
+  return Array.from({ length: matchSettings.periodCount }, (_, index) => index);
+}
+
+function makePeriodArray() {
+  return Array(matchSettings.periodCount).fill(0);
+}
+
+function normalizePeriodArray(values) {
+  return getPeriodIndexes().map(index => Number(values?.[index]) || 0);
+}
+
+function getPeriodTargetMs() {
+  return (matchSettings.totalMinutes * 60 * 1000) / matchSettings.periodCount;
+}
+
+function getMatchTargetMs() {
+  return matchSettings.totalMinutes * 60 * 1000;
+}
+
+function getPeriodLabelWord() {
+  return matchSettings.periodCount === 2 ? "Halvlek" : "Period";
+}
+
+function saveMatchSettings() {
+  localStorage.setItem(MATCH_SETTINGS_KEY, JSON.stringify(matchSettings));
+}
 let PLAYERS = JSON.parse(localStorage.getItem("fotbollstranaren-players") || "null") || [...DEFAULT_PLAYERS];
 const ROLE_ORDER = {"1":1,"2":2,"3":3,"4":4,"MV":5};
 const playerStats = {};
 
 function createEmptyPlayerStats() {
   return {
-    halves: [0, 0, 0],
-    benchHalves: [0, 0, 0],
-    keeperHalves: [0, 0, 0]
+    halves: makePeriodArray(),
+    benchHalves: makePeriodArray(),
+    keeperHalves: makePeriodArray()
   };
 }
 
@@ -74,7 +107,7 @@ let objectCounter = 0;
 let currentCategory = "passing";
 let currentExerciseIndex = 0;
 let currentHalf = 0;
-const halfElapsedMs = [0, 0, 0];
+let halfElapsedMs = makePeriodArray();
 let stopwatchStartedAt = null;
 let stopwatchTimerId = null;
 let stopwatchLastTick = null;
@@ -111,7 +144,7 @@ function fmtTime(totalSeconds) {
 }
 
 function getPlayerTotalSeconds(name) {
-  return (playerStats[name]?.halves || [0, 0, 0]).reduce((sum, seconds) => sum + seconds, 0);
+  return (playerStats[name]?.halves || makePeriodArray()).reduce((sum, seconds) => sum + seconds, 0);
 }
 
 function getOpponentName() {
@@ -148,9 +181,9 @@ function saveCurrentMatchState() {
     opponentName: document.getElementById("opponentName")?.value || "",
     goalEvents: goalEvents.map(event => ({ ...event })),
     playerStats: Object.fromEntries(PLAYERS.map(name => [name, {
-      halves: [...(playerStats[name]?.halves || [0,0,0])],
-      benchHalves: [...(playerStats[name]?.benchHalves || [0,0,0])],
-      keeperHalves: [...(playerStats[name]?.keeperHalves || [0,0,0])]
+      halves: normalizePeriodArray(playerStats[name]?.halves),
+      benchHalves: normalizePeriodArray(playerStats[name]?.benchHalves),
+      keeperHalves: normalizePeriodArray(playerStats[name]?.keeperHalves)
     }])),
     pitchObjects: getPitchState(),
     benchPlayers: [...document.querySelectorAll("#bench .bench-player")].map(el => el.dataset.name)
@@ -176,10 +209,8 @@ function restoreCurrentMatchState() {
   const bench = document.getElementById("bench");
   if (!pitch || !bench) return false;
 
-  currentHalf = Math.max(0, Math.min(2, Number(state.currentHalf) || 0));
-  [0,1,2].forEach(index => {
-    halfElapsedMs[index] = Number(state.halfElapsedMs?.[index]) || 0;
-  });
+  currentHalf = Math.max(0, Math.min(matchSettings.periodCount - 1, Number(state.currentHalf) || 0));
+  halfElapsedMs = normalizePeriodArray(state.halfElapsedMs);
 
   matchScore = {
     home: Math.max(0, Number(state.matchScore?.home) || 0),
@@ -190,9 +221,9 @@ function restoreCurrentMatchState() {
   PLAYERS.forEach(name => {
     const saved = state.playerStats?.[name];
     if (!saved) return;
-    playerStats[name].halves = [0,1,2].map(index => Number(saved.halves?.[index]) || 0);
-    playerStats[name].benchHalves = [0,1,2].map(index => Number(saved.benchHalves?.[index]) || 0);
-    playerStats[name].keeperHalves = [0,1,2].map(index => Number(saved.keeperHalves?.[index]) || 0);
+    playerStats[name].halves = normalizePeriodArray(saved.halves);
+    playerStats[name].benchHalves = normalizePeriodArray(saved.benchHalves);
+    playerStats[name].keeperHalves = normalizePeriodArray(saved.keeperHalves);
   });
 
   pitch.querySelectorAll(".token").forEach(el => el.remove());
@@ -846,15 +877,15 @@ function getLivePlayerKeeperHalfSeconds(name, halfIndex) {
 }
 
 function getLivePlayerTotalSeconds(name) {
-  return [0, 1, 2].reduce((sum, halfIndex) => sum + getLivePlayerHalfSeconds(name, halfIndex), 0);
+  return getPeriodIndexes().reduce((sum, halfIndex) => sum + getLivePlayerHalfSeconds(name, halfIndex), 0);
 }
 
 function getLivePlayerBenchTotalSeconds(name) {
-  return [0, 1, 2].reduce((sum, halfIndex) => sum + getLivePlayerBenchHalfSeconds(name, halfIndex), 0);
+  return getPeriodIndexes().reduce((sum, halfIndex) => sum + getLivePlayerBenchHalfSeconds(name, halfIndex), 0);
 }
 
 function getLivePlayerKeeperTotalSeconds(name) {
-  return [0, 1, 2].reduce((sum, halfIndex) => sum + getLivePlayerKeeperHalfSeconds(name, halfIndex), 0);
+  return getPeriodIndexes().reduce((sum, halfIndex) => sum + getLivePlayerKeeperHalfSeconds(name, halfIndex), 0);
 }
 
 function getSortedPlayerStats(sortMode = "total") {
@@ -864,9 +895,9 @@ function getSortedPlayerStats(sortMode = "total") {
     name,
     originalIndex,
     active: activeNames.has(name),
-    halves: [0, 1, 2].map(halfIndex => getLivePlayerHalfSeconds(name, halfIndex)),
-    benchHalves: [0, 1, 2].map(halfIndex => getLivePlayerBenchHalfSeconds(name, halfIndex)),
-    keeperHalves: [0, 1, 2].map(halfIndex => getLivePlayerKeeperHalfSeconds(name, halfIndex)),
+    halves: getPeriodIndexes().map(halfIndex => getLivePlayerHalfSeconds(name, halfIndex)),
+    benchHalves: getPeriodIndexes().map(halfIndex => getLivePlayerBenchHalfSeconds(name, halfIndex)),
+    keeperHalves: getPeriodIndexes().map(halfIndex => getLivePlayerKeeperHalfSeconds(name, halfIndex)),
     total: getLivePlayerTotalSeconds(name),
     benchTotal: getLivePlayerBenchTotalSeconds(name),
     keeperTotal: getLivePlayerKeeperTotalSeconds(name)
@@ -894,9 +925,9 @@ function updateMatchInfo() {
 
 function resetPlayerStats() {
   PLAYERS.forEach(name => {
-    playerStats[name].halves = [0, 0, 0];
-    playerStats[name].benchHalves = [0, 0, 0];
-    playerStats[name].keeperHalves = [0, 0, 0];
+    playerStats[name].halves = makePeriodArray();
+    playerStats[name].benchHalves = makePeriodArray();
+    playerStats[name].keeperHalves = makePeriodArray();
   });
   updatePlaytimeStats();
 }
@@ -1052,7 +1083,7 @@ function startNewMatch() {
   if (stopwatchStartedAt) pauseStopwatch();
   selectedPlaytimePlayer = null;
   resetMatchScore();
-  halfElapsedMs.fill(0);
+  halfElapsedMs = makePeriodArray();
   currentHalf = 0;
 
   PLAYERS.forEach(name => {
@@ -1189,7 +1220,7 @@ function getLiveHalfElapsedMs(index) {
 }
 
 function makeMatchSnapshot(name) {
-  const halfTimesMs = [0, 1, 2].map(getLiveHalfElapsedMs);
+  const halfTimesMs = getPeriodIndexes().map(getLiveHalfElapsedMs);
 
   return {
     id: `match-${Date.now()}`,
@@ -1197,15 +1228,16 @@ function makeMatchSnapshot(name) {
     savedAt: new Date().toISOString(),
     halfTimesMs,
     totalMatchMs: halfTimesMs.reduce((sum, ms) => sum + ms, 0),
+    matchSettings: { ...matchSettings },
     score: { home: matchScore.home, away: matchScore.away },
     opponentName: getOpponentName(),
     goals: goalEvents.map(event => ({ ...event })),
     players: PLAYERS.map(playerName => ({
       name: playerName,
       goals: getGoalCount(playerName),
-      halves: [0, 1, 2].map(index => getLivePlayerHalfSeconds(playerName, index)),
-      benchHalves: [0, 1, 2].map(index => getLivePlayerBenchHalfSeconds(playerName, index)),
-      keeperHalves: [0, 1, 2].map(index => getLivePlayerKeeperHalfSeconds(playerName, index))
+      halves: getPeriodIndexes().map(index => getLivePlayerHalfSeconds(playerName, index)),
+      benchHalves: getPeriodIndexes().map(index => getLivePlayerBenchHalfSeconds(playerName, index)),
+      keeperHalves: getPeriodIndexes().map(index => getLivePlayerKeeperHalfSeconds(playerName, index))
     }))
   };
 }
@@ -1340,9 +1372,7 @@ function renderHistory() {
       return `
         <tr>
           <td><strong>${player.name}</strong></td>
-          <td>${fmtTime(player.halves[0])}</td>
-          <td>${fmtTime(player.halves[1])}</td>
-          <td>${fmtTime(player.halves[2])}</td>
+          ${(player.halves || []).map(value => `<td>${fmtTime(value)}</td>`).join("")}
           <td>${fmtTime(total)}</td>
           <td>${fmtTime(benchTotal)}</td>
           <td>${fmtTime(keeperTotal)}</td>
@@ -1373,9 +1403,7 @@ function renderHistory() {
           ` : ""}
 
           <div class="history-half-grid">
-            <div><span>H1</span><strong>${fmtTime(match.halfTimesMs[0] / 1000)}</strong></div>
-            <div><span>H2</span><strong>${fmtTime(match.halfTimesMs[1] / 1000)}</strong></div>
-            <div><span>H3</span><strong>${fmtTime(match.halfTimesMs[2] / 1000)}</strong></div>
+            ${(match.halfTimesMs || []).map((value, index) => `<div><span>${(match.matchSettings?.periodCount || match.halfTimesMs.length) === 2 ? "H" : "P"}${index + 1}</span><strong>${fmtTime(value / 1000)}</strong></div>`).join("")}
             <div><span>Totalt</span><strong>${fmtTime(match.totalMatchMs / 1000)}</strong></div>
           </div>
 
@@ -1384,9 +1412,7 @@ function renderHistory() {
               <thead>
                 <tr>
                   <th>Spelare</th>
-                  <th>H1</th>
-                  <th>H2</th>
-                  <th>H3</th>
+                  ${Array.from({ length: Math.max(...match.players.map(player => player.halves?.length || 0), match.halfTimesMs?.length || 0) }, (_, index) => `<th>${(match.matchSettings?.periodCount || match.halfTimesMs?.length) === 2 ? "H" : "P"}${index + 1}</th>`).join("")}
                   <th>Totalt</th>
                   <th>Bänk</th>
                   <th>MV</th>
@@ -1424,6 +1450,7 @@ function exportAppData() {
     players: PLAYERS,
     exercises,
     matchHistory,
+    matchSettings,
     currentMatch: JSON.parse(localStorage.getItem(CURRENT_MATCH_KEY) || "null")
   };
 
@@ -1454,6 +1481,7 @@ function importAppData(file) {
       localStorage.setItem("fotbollstranaren-players", JSON.stringify(data.players));
       localStorage.setItem("fotbollstranaren-exercises", JSON.stringify(data.exercises));
       localStorage.setItem("fotbollstranaren-match-history", JSON.stringify(data.matchHistory));
+      if (data.matchSettings) localStorage.setItem(MATCH_SETTINGS_KEY, JSON.stringify(data.matchSettings));
       if (data.currentMatch) {
         localStorage.setItem(CURRENT_MATCH_KEY, JSON.stringify(data.currentMatch));
       } else {
@@ -1654,24 +1682,79 @@ function initTheme() {
 }
 
 function getCurrentHalfElapsedMs() {
-  return halfElapsedMs[currentHalf] + (stopwatchStartedAt ? (Date.now() - stopwatchStartedAt) : 0);
+  return (halfElapsedMs[currentHalf] || 0) + (stopwatchStartedAt ? (Date.now() - stopwatchStartedAt) : 0);
 }
 
-function updateHalfUI() {
-  const label = document.getElementById("halfLabel");
-  if (label) label.textContent = `Halvlek ${currentHalf + 1} av 3`;
+function getTotalElapsedMs() {
+  return getPeriodIndexes().reduce((sum, index) => sum + getLiveHalfElapsedMs(index), 0);
+}
 
-  document.querySelectorAll(".half-btn").forEach(btn => {
-    btn.classList.toggle("active", Number(btn.dataset.half) === currentHalf);
+function fmtDetailedTime(ms) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+}
+
+function renderHalfTabs() {
+  const root = document.getElementById("halfTabs");
+  if (!root) return;
+
+  root.innerHTML = getPeriodIndexes().map(index =>
+    `<button class="half-btn${index === currentHalf ? " active" : ""}" data-half="${index}">${index + 1}</button>`
+  ).join("");
+
+  root.querySelectorAll(".half-btn").forEach(btn => {
+    btn.onclick = () => switchHalf(Number(btn.dataset.half));
   });
 }
 
+function updateHalfUI() {
+  const word = getPeriodLabelWord();
+  const label = document.getElementById("halfLabel");
+  if (label) label.textContent = `${word} ${currentHalf + 1} av ${matchSettings.periodCount}`;
+
+  const timerLabel = document.getElementById("stopwatchPeriodLabel");
+  if (timerLabel) timerLabel.textContent = `Tid i vald ${word.toLowerCase()}`;
+
+  const halfColumn = document.getElementById("lineupHalfColumn");
+  if (halfColumn) halfColumn.textContent = `${word === "Halvlek" ? "H" : "P"}${currentHalf + 1}`;
+
+  const plan = document.getElementById("matchTimePlan");
+  if (plan) {
+    plan.innerHTML = `
+      <span>${matchSettings.totalMinutes} min totalt</span>
+      <strong>${matchSettings.periodCount} × ${fmtDetailedTime(getPeriodTargetMs())}</strong>
+    `;
+  }
+
+  renderHalfTabs();
+}
+
 function updateStopwatchDisplay() {
-  document.getElementById("stopwatchDisplay").textContent = fmtTime(getCurrentHalfElapsedMs() / 1000);
+  const elapsed = getCurrentHalfElapsedMs();
+  const target = getPeriodTargetMs();
+  const display = document.getElementById("stopwatchDisplay");
+  const overtime = document.getElementById("overtimeDisplay");
+
+  if (display) display.textContent = fmtDetailedTime(Math.min(elapsed, target));
+
+  if (overtime) {
+    const over = Math.max(0, elapsed - target);
+    overtime.textContent = over > 0 ? `Övertid +${fmtDetailedTime(over)}` : "";
+    overtime.classList.toggle("active", over > 0);
+  }
 }
 
 function onStopwatchTick() {
   const now = Date.now();
+  const maxTotalMs = getMatchTargetMs() + (5 * 60 * 1000);
+
+  if (getTotalElapsedMs() >= maxTotalMs) {
+    pauseStopwatch();
+    return;
+  }
+
   const deltaSeconds = stopwatchLastTick ? (now - stopwatchLastTick) / 1000 : 0;
   stopwatchLastTick = now;
   tickPlayerStats(deltaSeconds);
@@ -1683,6 +1766,10 @@ function onStopwatchTick() {
 
 function startStopwatch() {
   if (stopwatchStartedAt) return;
+  if (getTotalElapsedMs() >= getMatchTargetMs() + (5 * 60 * 1000)) {
+    alert("Maximal övertid på 5 minuter är uppnådd.");
+    return;
+  }
   stopwatchStartedAt = Date.now();
   stopwatchLastTick = stopwatchStartedAt;
   stopwatchTimerId = setInterval(onStopwatchTick, 250);
@@ -1692,8 +1779,10 @@ function startStopwatch() {
 
 function pauseStopwatch() {
   if (!stopwatchStartedAt) return;
-  onStopwatchTick();
-  halfElapsedMs[currentHalf] += Date.now() - stopwatchStartedAt;
+  const now = Date.now();
+  const deltaSinceTick = stopwatchLastTick ? (now - stopwatchLastTick) / 1000 : 0;
+  if (deltaSinceTick > 0) tickPlayerStats(deltaSinceTick);
+  halfElapsedMs[currentHalf] = (halfElapsedMs[currentHalf] || 0) + (now - stopwatchStartedAt);
   stopwatchStartedAt = null;
   stopwatchLastTick = null;
   clearInterval(stopwatchTimerId);
@@ -1704,7 +1793,7 @@ function pauseStopwatch() {
 }
 
 function switchHalf(nextHalf) {
-  if (nextHalf < 0 || nextHalf > 2 || nextHalf === currentHalf) return;
+  if (nextHalf < 0 || nextHalf >= matchSettings.periodCount || nextHalf === currentHalf) return;
   const wasRunning = Boolean(stopwatchStartedAt);
   if (wasRunning) pauseStopwatch();
   currentHalf = nextHalf;
@@ -1736,7 +1825,7 @@ function resetCurrentHalf() {
 
 function resetAllMatchTimeAndStats() {
   if (stopwatchStartedAt) pauseStopwatch();
-  halfElapsedMs.fill(0);
+  halfElapsedMs = makePeriodArray();
   currentHalf = 0;
   resetPlayerStats();
   updateHalfUI();
@@ -1744,15 +1833,61 @@ function resetAllMatchTimeAndStats() {
   updatePlayerCardsTimes();
 }
 
+function applyMatchSettings(nextSettings) {
+  const nextPeriodCount = Math.max(1, Math.min(6, Number(nextSettings.periodCount) || 2));
+  const nextTotalMinutes = Math.max(5, Math.min(180, Number(nextSettings.totalMinutes) || 30));
+
+  if (stopwatchStartedAt) pauseStopwatch();
+
+  const periodCountChanged = nextPeriodCount !== matchSettings.periodCount;
+  matchSettings = { periodCount: nextPeriodCount, totalMinutes: nextTotalMinutes };
+  saveMatchSettings();
+
+  if (periodCountChanged) {
+    halfElapsedMs = normalizePeriodArray(halfElapsedMs);
+    currentHalf = Math.min(currentHalf, matchSettings.periodCount - 1);
+    PLAYERS.forEach(name => {
+      playerStats[name].halves = normalizePeriodArray(playerStats[name].halves);
+      playerStats[name].benchHalves = normalizePeriodArray(playerStats[name].benchHalves);
+      playerStats[name].keeperHalves = normalizePeriodArray(playerStats[name].keeperHalves);
+    });
+  }
+
+  updateSettingsUI();
+  updateHalfUI();
+  updateStopwatchDisplay();
+  renderPlaytimeRoster();
+  saveCurrentMatchState();
+}
+
+function updateSettingsUI() {
+  const count = document.getElementById("periodCountSetting");
+  const minutes = document.getElementById("matchMinutesSetting");
+  const summary = document.getElementById("periodLengthSummary");
+
+  if (count) count.value = String(matchSettings.periodCount);
+  if (minutes) minutes.value = String(matchSettings.totalMinutes);
+  if (summary) summary.textContent = fmtDetailedTime(getPeriodTargetMs());
+}
+
+function initSettings() {
+  const count = document.getElementById("periodCountSetting");
+  const minutes = document.getElementById("matchMinutesSetting");
+
+  if (count) count.onchange = () => applyMatchSettings({ periodCount: count.value, totalMinutes: matchSettings.totalMinutes });
+  if (minutes) {
+    const saveMinutes = () => applyMatchSettings({ periodCount: matchSettings.periodCount, totalMinutes: minutes.value });
+    minutes.onchange = saveMinutes;
+    minutes.onblur = saveMinutes;
+  }
+
+  updateSettingsUI();
+}
+
 function initStopwatch() {
   document.getElementById("stopwatchToggle").onclick = () => stopwatchStartedAt ? pauseStopwatch() : startStopwatch();
   document.getElementById("stopwatchReset").onclick = resetCurrentHalf;
   document.getElementById("clearPlaytimeSelection").onclick = clearPlaytimePlayerSelection;
-
-  document.querySelectorAll(".half-btn").forEach(btn => {
-    btn.onclick = () => switchHalf(Number(btn.dataset.half));
-  });
-
   updateHalfUI();
   updateStopwatchDisplay();
   renderLineupPanel();
@@ -1771,6 +1906,9 @@ document.getElementById("resetAllBtn").onclick = () => {
 
   exercises = cloneExercises(DEFAULT_EXERCISES);
   saveExercises();
+
+  matchSettings = { ...DEFAULT_MATCH_SETTINGS };
+  saveMatchSettings();
 
   resetMatch();
   currentCategory = "passing";
@@ -1797,6 +1935,7 @@ initStopwatch();
 initPlayerManager();
 initHistory();
 initDataTools();
+initSettings();
 renderExerciseList();
 loadExercise();
 
