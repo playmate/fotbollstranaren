@@ -1,8 +1,12 @@
-const APP_VERSION = "v0.5.0";
+const APP_VERSION = "v0.5.1";
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const ROLE_ORDER = {"1":1,"2":2,"3":3,"4":4,"MV":5};
-const playerStats = Object.fromEntries(PLAYERS.map(name => [name, { halves: [0, 0, 0] }]));
+const playerStats = Object.fromEntries(PLAYERS.map(name => [name, {
+  halves: [0, 0, 0],
+  benchHalves: [0, 0, 0],
+  keeperHalves: [0, 0, 0]
+}]));
 
 const exercises = {
   passing: [
@@ -392,22 +396,62 @@ function getActivePlayerNames() {
 
 function tickPlayerStats(deltaSeconds) {
   if (deltaSeconds <= 0) return;
-  getActivePlayerNames().forEach(name => {
-    if (playerStats[name]) playerStats[name].halves[currentHalf] += deltaSeconds;
+
+  const pitchPlayers = [...document.querySelectorAll('#matchPitch .player-token:not(.opponent):not(.coach)')];
+  const activeNames = new Set(pitchPlayers.map(el => el.dataset.name));
+  const keeperName = pitchPlayers.find(el => el.dataset.indicator === "MV")?.dataset.name || null;
+
+  PLAYERS.forEach(name => {
+    const stats = playerStats[name];
+    if (!stats) return;
+
+    if (activeNames.has(name)) {
+      stats.halves[currentHalf] += deltaSeconds;
+      if (name === keeperName) stats.keeperHalves[currentHalf] += deltaSeconds;
+    } else {
+      stats.benchHalves[currentHalf] += deltaSeconds;
+    }
   });
+}
+
+function getLiveStateDelta(name, halfIndex, kind) {
+  if (!stopwatchStartedAt || !stopwatchLastTick || halfIndex !== currentHalf) return 0;
+
+  const pitchPlayers = [...document.querySelectorAll('#matchPitch .player-token:not(.opponent):not(.coach)')];
+  const player = pitchPlayers.find(el => el.dataset.name === name);
+  const elapsed = (Date.now() - stopwatchLastTick) / 1000;
+
+  if (kind === "play") return player ? elapsed : 0;
+  if (kind === "bench") return player ? 0 : elapsed;
+  if (kind === "keeper") return player?.dataset.indicator === "MV" ? elapsed : 0;
+  return 0;
 }
 
 function getLivePlayerHalfSeconds(name, halfIndex) {
   const base = playerStats[name]?.halves?.[halfIndex] || 0;
-  const active = getActivePlayerNames().includes(name);
-  const liveDelta = active && stopwatchStartedAt && stopwatchLastTick && halfIndex === currentHalf
-    ? (Date.now() - stopwatchLastTick) / 1000
-    : 0;
-  return base + liveDelta;
+  return base + getLiveStateDelta(name, halfIndex, "play");
+}
+
+function getLivePlayerBenchHalfSeconds(name, halfIndex) {
+  const base = playerStats[name]?.benchHalves?.[halfIndex] || 0;
+  return base + getLiveStateDelta(name, halfIndex, "bench");
+}
+
+function getLivePlayerKeeperHalfSeconds(name, halfIndex) {
+  const base = playerStats[name]?.keeperHalves?.[halfIndex] || 0;
+  return base + getLiveStateDelta(name, halfIndex, "keeper");
 }
 
 function getLivePlayerTotalSeconds(name) {
   return [0, 1, 2].reduce((sum, halfIndex) => sum + getLivePlayerHalfSeconds(name, halfIndex), 0);
+}
+
+function getLivePlayerBenchTotalSeconds(name) {
+  return [0, 1, 2].reduce((sum, halfIndex) => sum + getLivePlayerBenchHalfSeconds(name, halfIndex), 0);
+}
+
+function getLivePlayerKeeperTotalSeconds(name) {
+  return [0, 1, 2].reduce((sum, halfIndex) => sum + getLivePlayerKeeperHalfSeconds(name, halfIndex), 0);
 }
 
 function getSortedPlayerStats() {
@@ -418,7 +462,11 @@ function getSortedPlayerStats() {
     originalIndex,
     active: activeNames.has(name),
     halves: [0, 1, 2].map(halfIndex => getLivePlayerHalfSeconds(name, halfIndex)),
-    total: getLivePlayerTotalSeconds(name)
+    benchHalves: [0, 1, 2].map(halfIndex => getLivePlayerBenchHalfSeconds(name, halfIndex)),
+    keeperHalves: [0, 1, 2].map(halfIndex => getLivePlayerKeeperHalfSeconds(name, halfIndex)),
+    total: getLivePlayerTotalSeconds(name),
+    benchTotal: getLivePlayerBenchTotalSeconds(name),
+    keeperTotal: getLivePlayerKeeperTotalSeconds(name)
   })).sort((a, b) => {
     if (a.total !== b.total) return a.total - b.total;
     return a.originalIndex - b.originalIndex;
@@ -452,6 +500,8 @@ function renderStatistics() {
         <td>${fmtTime(player.halves[1])}</td>
         <td>${fmtTime(player.halves[2])}</td>
         <td>${fmtTime(player.total)}</td>
+        <td>${fmtTime(player.benchTotal)}</td>
+        <td>${fmtTime(player.keeperTotal)}</td>
         <td class="${player.active ? "statistics-status-active" : ""}">${player.active ? "På plan" : "Bänk"}</td>
       </tr>
     `).join("");
@@ -493,7 +543,11 @@ function updateMatchInfo() {
 }
 
 function resetPlayerStats() {
-  PLAYERS.forEach(name => playerStats[name].halves = [0, 0, 0]);
+  PLAYERS.forEach(name => {
+    playerStats[name].halves = [0, 0, 0];
+    playerStats[name].benchHalves = [0, 0, 0];
+    playerStats[name].keeperHalves = [0, 0, 0];
+  });
   updatePlaytimeStats();
 }
 
