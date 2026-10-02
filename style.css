@@ -582,3 +582,44 @@ body[data-theme="dark"] .roster-chip {
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
+
+
+/* Button contrast fixes for both themes */
+button.secondary {
+  background: #eaf0ec;
+  color: #15211a;
+  border: 1px solid #d7e2dc;
+}
+
+button.secondary:hover {
+  background: #dfe8e3;
+}
+
+body[data-theme="dark"] button.secondary {
+  background: #2a3931;
+  color: #f3f7f4;
+  border: 1px solid #46584f;
+}
+
+body[data-theme="dark"] button.secondary:hover {
+  background: #34483d;
+}
+
+body[data-theme="dark"] .ghost-btn {
+  background: rgba(255,255,255,.10);
+  color: #ffffff;
+  border: 1px solid rgba(255,255,255,.24);
+}
+
+body[data-theme="dark"] .ghost-btn:hover {
+  background: rgba(255,255,255,.16);
+}
+
+body[data-theme="light"] .ghost-btn {
+  color: #ffffff;
+}
+
+button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
