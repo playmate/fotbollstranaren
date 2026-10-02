@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.9";
+const APP_VERSION = "v1.6.10";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -478,6 +478,15 @@ function makeDraggable(el) {
     const originLeft = el.style.left;
     const originTop = el.style.top;
     const tokenRect = el.getBoundingClientRect();
+    let benchDragPlaceholder = null;
+
+    if (fromBench) {
+      benchDragPlaceholder = el.cloneNode(true);
+      benchDragPlaceholder.classList.remove("dragging", "dragging-floating", "bench-drag-preview");
+      benchDragPlaceholder.classList.add("bench-drag-origin");
+      benchDragPlaceholder.setAttribute("aria-hidden", "true");
+      originParent.insertBefore(benchDragPlaceholder, el);
+    }
     const matchPitch = document.getElementById("matchPitch");
     const bench = document.getElementById("bench");
 
@@ -502,12 +511,24 @@ function makeDraggable(el) {
       if (currentSwapTarget) currentSwapTarget.classList.add("swap-target");
     };
 
+    const removeBenchDragPlaceholder = () => {
+      if (benchDragPlaceholder) {
+        benchDragPlaceholder.remove();
+        benchDragPlaceholder = null;
+      }
+    };
+
     const restoreToOrigin = () => {
       clearSwapTarget();
       el.classList.remove("dragging", "dragging-floating", "bench-drag-preview");
       el.style.width = "";
       el.style.height = "";
-      originParent.appendChild(el);
+      if (fromBench && benchDragPlaceholder?.parentElement === originParent) {
+        benchDragPlaceholder.replaceWith(el);
+        benchDragPlaceholder = null;
+      } else {
+        originParent.appendChild(el);
+      }
       if (fromBench) {
         el.classList.add("bench-player");
         el.style.left = "";
@@ -562,6 +583,7 @@ function makeDraggable(el) {
           el.classList.remove("bench-player");
           el.style.left = targetLeft;
           el.style.top = targetTop;
+          removeBenchDragPlaceholder();
           clearSwapTarget();
           updateMatchInfo();
           return;
@@ -579,6 +601,7 @@ function makeDraggable(el) {
           resetSubstitutionClock(el.dataset.name);
           setMatchPlayerIndicator(el, indicator, el.dataset.name);
           placeFromPointer(matchPitch, el, ev.clientX, ev.clientY);
+          removeBenchDragPlaceholder();
           updateMatchInfo();
           return;
         }
