@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fotbollstränaren</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">LAG FÖDDA 2018</div>
+      <h1>⚽ Fotbollstränaren</h1>
+    </div>
+    <button id="resetAllBtn" class="ghost-btn">Återställ</button>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="match">Match</button>
+    <button class="tab" data-tab="training">Träning</button>
+    <button class="tab" data-tab="players">Spelare</button>
+  </nav>
+
+  <main>
+    <section id="match" class="page active">
+      <div class="page-title-row">
+        <div>
+          <h2>Matchuppställning</h2>
+          <p>Dra spelarna mellan planen och bänken. Flytta även motståndare och boll.</p>
+        </div>
+        <div class="actions">
+          <button id="resetMatchBtn">Återställ plan</button>
+          <button id="clearOppBtn" class="secondary">Rensa motståndare</button>
+        </div>
+      </div>
+
+      <div class="match-layout">
+        <div class="pitch-card">
+          <div id="matchPitch" class="pitch match-pitch">
+            <div class="half-line"></div>
+            <div class="center-circle"></div>
+            <div class="goal-area top"></div>
+            <div class="goal-area bottom"></div>
+            <div class="goal top-goal">MÅL</div>
+            <div class="goal bottom-goal">MÅL</div>
+          </div>
+        </div>
+
+        <aside class="side-panel">
+          <div class="panel">
+            <h3>Bänk</h3>
+            <div id="bench" class="bench dropzone"></div>
+            <div class="hint">Dra en spelare till planen eller tillbaka hit.</div>
+          </div>
+
+          <div class="panel">
+            <h3>Verktyg</h3>
+            <div class="tool-grid">
+              <button id="addOpponent">+ Motståndare</button>
+              <button id="addBall">+ Boll</button>
+              <button id="addCone">+ Kona</button>
+              <button id="addCoach">+ Tränare</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>Snabbinfo</h3>
+            <div id="matchInfo" class="stat-list"></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="training" class="page">
+      <div class="page-title-row">
+        <div>
+          <h2>Träning</h2>
+          <p>Välj kategori och öppna en övning.</p>
+        </div>
+      </div>
+
+      <div class="subtabs">
+        <button class="subtab active" data-category="passing">Passningar</button>
+        <button class="subtab" data-category="shooting">Skott</button>
+      </div>
+
+      <div class="training-layout">
+        <div id="exerciseList" class="exercise-list"></div>
+
+        <div class="exercise-stage">
+          <div class="exercise-header">
+            <div>
+              <h3 id="exerciseTitle">Passa genom porten</h3>
+              <p id="exerciseDescription"></p>
+            </div>
+            <button id="resetExerciseBtn" class="secondary">Återställ övning</button>
+          </div>
+
+          <div id="exercisePitch" class="pitch exercise-pitch">
+            <div class="half-line"></div>
+            <div class="center-circle"></div>
+            <div class="goal-area top"></div>
+            <div class="goal-area bottom"></div>
+            <div class="goal top-goal">MÅL</div>
+            <div class="goal bottom-goal">MÅL</div>
+          </div>
+
+          <div class="exercise-toolbar">
+            <button id="exAddPlayer">+ Spelare</button>
+            <button id="exAddBall">+ Boll</button>
+            <button id="exAddCone">+ Kona</button>
+            <button id="exAddCoach">+ Tränare</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="players" class="page">
+      <div class="page-title-row">
+        <div>
+          <h2>Spelare</h2>
+          <p>Laget består just nu av åtta spelare.</p>
+        </div>
+      </div>
+      <div id="playerCards" class="player-cards"></div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
