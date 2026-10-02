@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.9.0";
+const APP_VERSION = "v0.9.1";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 let PLAYERS = JSON.parse(localStorage.getItem("fotbollstranaren-players") || "null") || [...DEFAULT_PLAYERS];
@@ -79,6 +79,7 @@ let stopwatchStartedAt = null;
 let stopwatchTimerId = null;
 let stopwatchLastTick = null;
 let selectedPlaytimePlayer = null;
+let matchScore = { home: 0, away: 0 };
 
 const matchInitial = {
   pitchPlayers: [
@@ -720,6 +721,29 @@ function resetPlayerStats() {
   updatePlaytimeStats();
 }
 
+function renderMatchScore() {
+  const home = document.getElementById("homeScore");
+  const away = document.getElementById("awayScore");
+  if (home) home.textContent = String(matchScore.home);
+  if (away) away.textContent = String(matchScore.away);
+
+  const homeMinus = document.getElementById("homeGoalMinus");
+  const awayMinus = document.getElementById("awayGoalMinus");
+  if (homeMinus) homeMinus.disabled = matchScore.home <= 0;
+  if (awayMinus) awayMinus.disabled = matchScore.away <= 0;
+}
+
+function changeMatchScore(side, delta) {
+  if (!["home", "away"].includes(side)) return;
+  matchScore[side] = Math.max(0, matchScore[side] + delta);
+  renderMatchScore();
+}
+
+function resetMatchScore() {
+  matchScore = { home: 0, away: 0 };
+  renderMatchScore();
+}
+
 function resetMatch() {
   const pitch = document.getElementById("matchPitch");
   const bench = document.getElementById("bench");
@@ -751,6 +775,11 @@ function wireMatchTools() {
   const pitch = document.getElementById("matchPitch");
   document.getElementById("resetMatchBtn").onclick = resetMatch;
   document.getElementById("clearOppBtn").onclick = () => { pitch.querySelectorAll(".opponent").forEach(x => x.remove()); updateMatchInfo(); };
+  document.getElementById("homeGoalPlus").onclick = () => changeMatchScore("home", 1);
+  document.getElementById("homeGoalMinus").onclick = () => changeMatchScore("home", -1);
+  document.getElementById("awayGoalPlus").onclick = () => changeMatchScore("away", 1);
+  document.getElementById("awayGoalMinus").onclick = () => changeMatchScore("away", -1);
+  renderMatchScore();
 }
 
 function savePlayers() {
@@ -879,6 +908,7 @@ function makeMatchSnapshot(name) {
     savedAt: new Date().toISOString(),
     halfTimesMs,
     totalMatchMs: halfTimesMs.reduce((sum, ms) => sum + ms, 0),
+    score: { home: matchScore.home, away: matchScore.away },
     players: PLAYERS.map(playerName => ({
       name: playerName,
       halves: [0, 1, 2].map(index => getLivePlayerHalfSeconds(playerName, index)),
@@ -970,10 +1000,20 @@ function renderHistory() {
             <strong>${match.name}</strong>
             <span>${dateText}</span>
           </div>
-          <div class="history-summary-time">${fmtTime(match.totalMatchMs / 1000)}</div>
+          <div class="history-summary-meta">
+            <div class="history-score">${match.score ? `${match.score.home}–${match.score.away}` : "–"}</div>
+            <div class="history-summary-time">${fmtTime(match.totalMatchMs / 1000)}</div>
+          </div>
         </summary>
 
         <div class="history-card-content">
+          ${match.score ? `
+            <div class="history-result">
+              <span>Resultat</span>
+              <strong>${match.score.home} – ${match.score.away}</strong>
+            </div>
+          ` : ""}
+
           <div class="history-half-grid">
             <div><span>H1</span><strong>${fmtTime(match.halfTimesMs[0] / 1000)}</strong></div>
             <div><span>H2</span><strong>${fmtTime(match.halfTimesMs[1] / 1000)}</strong></div>
@@ -1280,6 +1320,7 @@ function initStopwatch() {
 
 document.getElementById("resetAllBtn").onclick = () => {
   selectedPlaytimePlayer = null;
+  resetMatchScore();
   PLAYERS = [...DEFAULT_PLAYERS];
   Object.keys(playerStats).forEach(name => delete playerStats[name]);
   PLAYERS.forEach(name => playerStats[name] = createEmptyPlayerStats());
