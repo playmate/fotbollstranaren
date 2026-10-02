@@ -1942,3 +1942,57 @@ button.secondary:hover {
 }
 .overtime-display.active { color: #ffb45d; }
 .half-tabs { flex-wrap: wrap; }
+
+
+/* v1.1.1 - sharper splash logo with zoom-outro */
+.app-splash {
+  background: #000 !important;
+  overflow: hidden;
+}
+
+.splash-logo {
+  display: grid;
+  place-items: center;
+  animation: splash-logo-zoom-fade 1.8s ease forwards !important;
+}
+
+.splash-logo-image {
+  display: block;
+  width: min(70vw, 420px) !important;
+  max-width: 420px;
+  height: auto;
+  object-fit: contain;
+  image-rendering: auto;
+  transform-origin: center center;
+  filter: drop-shadow(0 10px 26px rgba(0,0,0,.45));
+}
+
+.app-splash.is-finished {
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+
+@keyframes splash-logo-zoom-fade {
+  0% {
+    opacity: 0;
+    transform: scale(.92);
+  }
+  18% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  68% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.14);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-logo {
+    animation: none !important;
+  }
+}
