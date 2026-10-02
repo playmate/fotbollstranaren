@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.9.2";
+const APP_VERSION = "v1.0.0";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 let PLAYERS = JSON.parse(localStorage.getItem("fotbollstranaren-players") || "null") || [...DEFAULT_PLAYERS];
@@ -80,6 +80,9 @@ let stopwatchTimerId = null;
 let stopwatchLastTick = null;
 let selectedPlaytimePlayer = null;
 let matchScore = { home: 0, away: 0 };
+let goalEvents = [];
+let autoSaveReady = false;
+const CURRENT_MATCH_KEY = "fotbollstranaren-current-match";
 
 const matchInitial = {
   pitchPlayers: [
@@ -109,6 +112,139 @@ function fmtTime(totalSeconds) {
 
 function getPlayerTotalSeconds(name) {
   return (playerStats[name]?.halves || [0, 0, 0]).reduce((sum, seconds) => sum + seconds, 0);
+}
+
+function getOpponentName() {
+  return document.getElementById("opponentName")?.value.trim() || "Motståndare";
+}
+
+function getGoalCount(name) {
+  return goalEvents.filter(event => event.playerName === name).length;
+}
+
+function getPitchState() {
+  const pitch = document.getElementById("matchPitch");
+  if (!pitch) return [];
+
+  return [...pitch.querySelectorAll(".token")].map(el => ({
+    type: el.dataset.type,
+    name: el.dataset.name || "",
+    indicator: el.dataset.indicator || "",
+    opponent: el.classList.contains("opponent"),
+    left: el.style.left,
+    top: el.style.top
+  }));
+}
+
+function saveCurrentMatchState() {
+  if (!autoSaveReady) return;
+
+  const state = {
+    version: 1,
+    savedAt: Date.now(),
+    currentHalf,
+    halfElapsedMs: [...halfElapsedMs],
+    matchScore: { ...matchScore },
+    opponentName: document.getElementById("opponentName")?.value || "",
+    goalEvents: goalEvents.map(event => ({ ...event })),
+    playerStats: Object.fromEntries(PLAYERS.map(name => [name, {
+      halves: [...(playerStats[name]?.halves || [0,0,0])],
+      benchHalves: [...(playerStats[name]?.benchHalves || [0,0,0])],
+      keeperHalves: [...(playerStats[name]?.keeperHalves || [0,0,0])]
+    }])),
+    pitchObjects: getPitchState(),
+    benchPlayers: [...document.querySelectorAll("#bench .bench-player")].map(el => el.dataset.name)
+  };
+
+  localStorage.setItem(CURRENT_MATCH_KEY, JSON.stringify(state));
+}
+
+function clearCurrentMatchState() {
+  localStorage.removeItem(CURRENT_MATCH_KEY);
+}
+
+function restoreCurrentMatchState() {
+  let state = null;
+  try {
+    state = JSON.parse(localStorage.getItem(CURRENT_MATCH_KEY) || "null");
+  } catch {
+    state = null;
+  }
+  if (!state) return false;
+
+  const pitch = document.getElementById("matchPitch");
+  const bench = document.getElementById("bench");
+  if (!pitch || !bench) return false;
+
+  currentHalf = Math.max(0, Math.min(2, Number(state.currentHalf) || 0));
+  [0,1,2].forEach(index => {
+    halfElapsedMs[index] = Number(state.halfElapsedMs?.[index]) || 0;
+  });
+
+  matchScore = {
+    home: Math.max(0, Number(state.matchScore?.home) || 0),
+    away: Math.max(0, Number(state.matchScore?.away) || 0)
+  };
+  goalEvents = Array.isArray(state.goalEvents) ? state.goalEvents.filter(event => event && ("playerName" in event)) : [];
+
+  PLAYERS.forEach(name => {
+    const saved = state.playerStats?.[name];
+    if (!saved) return;
+    playerStats[name].halves = [0,1,2].map(index => Number(saved.halves?.[index]) || 0);
+    playerStats[name].benchHalves = [0,1,2].map(index => Number(saved.benchHalves?.[index]) || 0);
+    playerStats[name].keeperHalves = [0,1,2].map(index => Number(saved.keeperHalves?.[index]) || 0);
+  });
+
+  pitch.querySelectorAll(".token").forEach(el => el.remove());
+  bench.innerHTML = "";
+
+  const restoredNames = new Set();
+  (state.pitchObjects || []).forEach(item => {
+    if (item.type === "player" && !item.opponent && !PLAYERS.includes(item.name)) return;
+
+    let token;
+    if (item.type === "player") {
+      token = createToken("player", {
+        name: item.opponent ? "Motståndare" : item.name,
+        indicator: item.indicator || undefined,
+        opponent: Boolean(item.opponent)
+      });
+      if (!item.opponent) restoredNames.add(item.name);
+    } else if (item.type === "ball") {
+      token = createToken("ball");
+    } else if (item.type === "cone") {
+      token = createToken("cone");
+    } else if (item.type === "coach") {
+      token = createToken("coach", { name: item.name || "Tränare" });
+    } else {
+      return;
+    }
+
+    pitch.appendChild(token);
+    token.style.left = item.left || "50%";
+    token.style.top = item.top || "50%";
+  });
+
+  const benchNames = Array.isArray(state.benchPlayers) ? state.benchPlayers : [];
+  benchNames.forEach(name => {
+    if (PLAYERS.includes(name) && !restoredNames.has(name)) {
+      addPlayerToBench(name);
+      restoredNames.add(name);
+    }
+  });
+
+  PLAYERS.forEach(name => {
+    if (!restoredNames.has(name)) addPlayerToBench(name);
+  });
+
+  const opponentInput = document.getElementById("opponentName");
+  if (opponentInput) opponentInput.value = state.opponentName || "";
+
+  renderMatchScore();
+  updateHalfUI();
+  updateStopwatchDisplay();
+  updateMatchInfo();
+  return true;
 }
 
 function setTabs() {
@@ -499,7 +635,8 @@ function renderPlaytimeRoster() {
       ...snapshot,
       halfTime: getLivePlayerHalfSeconds(name, currentHalf),
       totalTime: getLivePlayerTotalSeconds(name),
-      benchHalfTime: getLivePlayerBenchHalfSeconds(name, currentHalf)
+      benchHalfTime: getLivePlayerBenchHalfSeconds(name, currentHalf),
+      goals: getGoalCount(name)
     };
   }).sort((a, b) => {
     if (a.location !== b.location) return a.location === "pitch" ? -1 : 1;
@@ -517,6 +654,9 @@ function renderPlaytimeRoster() {
     const benchInfo = player.location === "bench"
       ? `<span class="playtime-bench-detail">${fmtTime(player.benchHalfTime)} på bänk</span>`
       : "";
+    const goalsInfo = player.goals > 0
+      ? `<span class="playtime-goals">${player.goals} mål</span>`
+      : "";
 
     return `
       <button type="button" class="playtime-player-row${selected}" data-playtime-player="${player.name}">
@@ -525,6 +665,7 @@ function renderPlaytimeRoster() {
           <div class="lineup-status-row">
             <span class="lineup-status ${statusClass}">${status}</span>
             ${benchInfo}
+            ${goalsInfo}
           </div>
         </div>
         <div class="lineup-time">${fmtTime(player.halfTime)}</div>
@@ -536,6 +677,43 @@ function renderPlaytimeRoster() {
   root.querySelectorAll("[data-playtime-player]").forEach(btn => {
     btn.onclick = () => handlePlaytimePlayerClick(btn.dataset.playtimePlayer);
   });
+
+  renderSubstitutionSuggestion();
+}
+
+function renderSubstitutionSuggestion() {
+  const root = document.getElementById("substitutionSuggestion");
+  if (!root) return;
+
+  const active = PLAYERS
+    .map(name => ({ name, snapshot: getPlayerSnapshot(name), total: getLivePlayerTotalSeconds(name), bench: getLivePlayerBenchTotalSeconds(name) }))
+    .filter(item => item.snapshot.location === "pitch")
+    .sort((a,b) => b.total - a.total);
+
+  const bench = PLAYERS
+    .map(name => ({ name, snapshot: getPlayerSnapshot(name), total: getLivePlayerTotalSeconds(name), bench: getLivePlayerBenchTotalSeconds(name) }))
+    .filter(item => item.snapshot.location === "bench")
+    .sort((a,b) => b.bench - a.bench || a.total - b.total);
+
+  if (!active.length || !bench.length) {
+    root.innerHTML = "";
+    return;
+  }
+
+  const outgoing = active[0];
+  const incoming = bench[0];
+  root.innerHTML = `
+    <div>
+      <span>Bytesförslag</span>
+      <strong>${incoming.name} in · ${outgoing.name} ut</strong>
+    </div>
+    <button type="button" class="secondary compact-btn" id="selectSuggestionBtn">Markera</button>
+  `;
+
+  document.getElementById("selectSuggestionBtn").onclick = () => {
+    selectedPlaytimePlayer = outgoing.name;
+    renderPlaytimeRoster();
+  };
 }
 
 function clearPlaytimePlayerSelection() {
@@ -703,6 +881,7 @@ function getSortedPlayerStats(sortMode = "total") {
 function updatePlaytimeStats() {
   renderLineupPanel();
   renderStatistics();
+  saveCurrentMatchState();
 }
 
 function renderStatistics() {}
@@ -710,6 +889,7 @@ function renderStatistics() {}
 function updateMatchInfo() {
   renderLineupPanel();
   renderPlayerManager();
+  saveCurrentMatchState();
 }
 
 function resetPlayerStats() {
@@ -733,14 +913,79 @@ function renderMatchScore() {
   if (awayMinus) awayMinus.disabled = matchScore.away <= 0;
 }
 
-function changeMatchScore(side, delta) {
-  if (!["home", "away"].includes(side)) return;
-  matchScore[side] = Math.max(0, matchScore[side] + delta);
+function closeGoalScorerModal() {
+  const modal = document.getElementById("goalScorerModal");
+  if (modal) modal.hidden = true;
+}
+
+function recordHomeGoal(playerName = null) {
+  matchScore.home += 1;
+  goalEvents.push({
+    playerName,
+    half: currentHalf,
+    atSeconds: getCurrentHalfElapsedMs() / 1000,
+    createdAt: Date.now()
+  });
   renderMatchScore();
+  renderPlaytimeRoster();
+  renderPlayerManager();
+  closeGoalScorerModal();
+  saveCurrentMatchState();
+}
+
+function openGoalScorerModal() {
+  const modal = document.getElementById("goalScorerModal");
+  const activeRoot = document.getElementById("goalScorerActive");
+  const benchRoot = document.getElementById("goalScorerBench");
+  if (!modal || !activeRoot || !benchRoot) return;
+
+  const active = [...document.querySelectorAll('#matchPitch .player-token:not(.opponent):not(.coach)')]
+    .sort((a,b) => (ROLE_ORDER[a.dataset.indicator] || 99) - (ROLE_ORDER[b.dataset.indicator] || 99))
+    .map(el => el.dataset.name);
+
+  const activeSet = new Set(active);
+  const bench = PLAYERS.filter(name => !activeSet.has(name));
+
+  activeRoot.innerHTML = `
+    <div class="goal-scorer-section-title">På plan</div>
+    <div class="goal-scorer-list">
+      ${active.map(name => `<button type="button" class="goal-scorer-player on-pitch" data-goal-scorer="${name}">${name}</button>`).join("")}
+    </div>
+  `;
+
+  benchRoot.innerHTML = bench.length ? `
+    <div class="goal-scorer-section-title">På bänken <span>om du glömt göra bytet</span></div>
+    <div class="goal-scorer-list">
+      ${bench.map(name => `<button type="button" class="goal-scorer-player on-bench" data-goal-scorer="${name}">${name}</button>`).join("")}
+    </div>
+  ` : "";
+
+  modal.querySelectorAll("[data-goal-scorer]").forEach(btn => {
+    btn.onclick = () => recordHomeGoal(btn.dataset.goalScorer);
+  });
+
+  modal.hidden = false;
+}
+
+function changeAwayScore(delta) {
+  matchScore.away = Math.max(0, matchScore.away + delta);
+  renderMatchScore();
+  saveCurrentMatchState();
+}
+
+function removeLastHomeGoal() {
+  if (matchScore.home <= 0) return;
+  matchScore.home -= 1;
+  if (goalEvents.length) goalEvents.pop();
+  renderMatchScore();
+  renderPlaytimeRoster();
+  renderPlayerManager();
+  saveCurrentMatchState();
 }
 
 function resetMatchScore() {
   matchScore = { home: 0, away: 0 };
+  goalEvents = [];
   renderMatchScore();
 }
 
@@ -774,12 +1019,55 @@ function resetMatch() {
 function wireMatchTools() {
   const pitch = document.getElementById("matchPitch");
   document.getElementById("resetMatchBtn").onclick = resetMatch;
-  document.getElementById("clearOppBtn").onclick = () => { pitch.querySelectorAll(".opponent").forEach(x => x.remove()); updateMatchInfo(); };
-  document.getElementById("homeGoalPlus").onclick = () => changeMatchScore("home", 1);
-  document.getElementById("homeGoalMinus").onclick = () => changeMatchScore("home", -1);
-  document.getElementById("awayGoalPlus").onclick = () => changeMatchScore("away", 1);
-  document.getElementById("awayGoalMinus").onclick = () => changeMatchScore("away", -1);
+  document.getElementById("clearOppBtn").onclick = () => {
+    pitch.querySelectorAll(".opponent").forEach(x => x.remove());
+    updateMatchInfo();
+  };
+  document.getElementById("homeGoalPlus").onclick = openGoalScorerModal;
+  document.getElementById("homeGoalMinus").onclick = removeLastHomeGoal;
+  document.getElementById("awayGoalPlus").onclick = () => changeAwayScore(1);
+  document.getElementById("awayGoalMinus").onclick = () => changeAwayScore(-1);
+  document.getElementById("newMatchBtn").onclick = startNewMatch;
+
+  const opponentInput = document.getElementById("opponentName");
+  if (opponentInput) opponentInput.addEventListener("input", saveCurrentMatchState);
+
+  document.getElementById("closeGoalScorerModal").onclick = closeGoalScorerModal;
+  document.querySelectorAll("[data-close-goal-modal]").forEach(el => {
+    el.onclick = closeGoalScorerModal;
+  });
+  document.getElementById("goalWithoutScorer").onclick = () => recordHomeGoal(null);
+
   renderMatchScore();
+}
+
+function hasCurrentMatchActivity() {
+  const totalMs = halfElapsedMs.reduce((sum, ms) => sum + ms, 0) + (stopwatchStartedAt ? Date.now() - stopwatchStartedAt : 0);
+  return totalMs > 0 || matchScore.home > 0 || matchScore.away > 0 || goalEvents.length > 0;
+}
+
+function startNewMatch() {
+  if (hasCurrentMatchActivity() && !confirm("Starta en ny match? Nuvarande osparade matchdata nollställs.")) return;
+
+  if (stopwatchStartedAt) pauseStopwatch();
+  selectedPlaytimePlayer = null;
+  resetMatchScore();
+  halfElapsedMs.fill(0);
+  currentHalf = 0;
+
+  PLAYERS.forEach(name => {
+    playerStats[name] = createEmptyPlayerStats();
+  });
+
+  const opponentInput = document.getElementById("opponentName");
+  if (opponentInput) opponentInput.value = "";
+
+  resetMatch();
+  updateHalfUI();
+  updateStopwatchDisplay();
+  renderPlaytimeRoster();
+  clearCurrentMatchState();
+  saveCurrentMatchState();
 }
 
 function savePlayers() {
@@ -871,6 +1159,7 @@ function removePlayer(name) {
   updateMatchInfo();
 
   if (wasRunning) startStopwatch();
+  saveCurrentMatchState();
 }
 
 function initPlayerManager() {
@@ -909,8 +1198,11 @@ function makeMatchSnapshot(name) {
     halfTimesMs,
     totalMatchMs: halfTimesMs.reduce((sum, ms) => sum + ms, 0),
     score: { home: matchScore.home, away: matchScore.away },
+    opponentName: getOpponentName(),
+    goals: goalEvents.map(event => ({ ...event })),
     players: PLAYERS.map(playerName => ({
       name: playerName,
+      goals: getGoalCount(playerName),
       halves: [0, 1, 2].map(index => getLivePlayerHalfSeconds(playerName, index)),
       benchHalves: [0, 1, 2].map(index => getLivePlayerBenchHalfSeconds(playerName, index)),
       keeperHalves: [0, 1, 2].map(index => getLivePlayerKeeperHalfSeconds(playerName, index))
@@ -921,7 +1213,10 @@ function makeMatchSnapshot(name) {
 function saveCurrentMatchToHistory() {
   if (stopwatchStartedAt) onStopwatchTick();
 
-  const suggestedName = `Match ${matchHistory.length + 1}`;
+  const opponent = getOpponentName();
+  const suggestedName = opponent === "Motståndare"
+    ? `Match ${matchHistory.length + 1}`
+    : `Vaksala SK – ${opponent}`;
   const enteredName = prompt("Namn på matchen:", suggestedName);
   if (enteredName === null) return;
 
@@ -962,11 +1257,73 @@ function clearHistory() {
   renderHistory();
 }
 
+function renderHistoryPlayerTotals() {
+  const root = document.getElementById("historyPlayerTotals");
+  if (!root) return;
+
+  if (!matchHistory.length) {
+    root.innerHTML = "";
+    root.style.display = "none";
+    return;
+  }
+
+  const totals = new Map();
+  matchHistory.forEach(match => {
+    (match.players || []).forEach(player => {
+      if (!totals.has(player.name)) {
+        totals.set(player.name, { name: player.name, matches: 0, play: 0, bench: 0, keeper: 0, goals: 0 });
+      }
+      const total = totals.get(player.name);
+      total.matches += 1;
+      total.play += (player.halves || []).reduce((sum, value) => sum + (Number(value) || 0), 0);
+      total.bench += (player.benchHalves || []).reduce((sum, value) => sum + (Number(value) || 0), 0);
+      total.keeper += (player.keeperHalves || []).reduce((sum, value) => sum + (Number(value) || 0), 0);
+      total.goals += Number(player.goals) || 0;
+    });
+  });
+
+  const rows = [...totals.values()].sort((a,b) => b.play - a.play).map(player => `
+    <tr>
+      <td><strong>${player.name}</strong></td>
+      <td>${player.matches}</td>
+      <td>${fmtTime(player.play)}</td>
+      <td>${fmtTime(player.matches ? player.play / player.matches : 0)}</td>
+      <td>${fmtTime(player.bench)}</td>
+      <td>${fmtTime(player.keeper)}</td>
+      <td>${player.goals}</td>
+    </tr>
+  `).join("");
+
+  root.style.display = "block";
+  root.innerHTML = `
+    <details>
+      <summary>Spelarstatistik över alla matcher</summary>
+      <div class="history-table-wrap history-totals-wrap">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Spelare</th>
+              <th>Matcher</th>
+              <th>Speltid</th>
+              <th>Snitt</th>
+              <th>Bänk</th>
+              <th>MV</th>
+              <th>Mål</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </details>
+  `;
+}
+
 function renderHistory() {
   const root = document.getElementById("historyList");
   const empty = document.getElementById("historyEmpty");
   if (!root || !empty) return;
 
+  renderHistoryPlayerTotals();
   empty.style.display = matchHistory.length ? "none" : "block";
 
   root.innerHTML = matchHistory.map(match => {
@@ -989,6 +1346,7 @@ function renderHistory() {
           <td>${fmtTime(total)}</td>
           <td>${fmtTime(benchTotal)}</td>
           <td>${fmtTime(keeperTotal)}</td>
+          <td>${Number(player.goals) || 0}</td>
         </tr>
       `;
     }).join("");
@@ -1032,6 +1390,7 @@ function renderHistory() {
                   <th>Totalt</th>
                   <th>Bänk</th>
                   <th>MV</th>
+                  <th>Mål</th>
                 </tr>
               </thead>
               <tbody>${playerRows}</tbody>
@@ -1053,6 +1412,74 @@ function renderHistory() {
       removeHistoryMatch(btn.dataset.deleteHistory);
     };
   });
+}
+
+function exportAppData() {
+  saveCurrentMatchState();
+
+  const payload = {
+    app: "Fotbollstränaren",
+    exportedAt: new Date().toISOString(),
+    version: APP_VERSION,
+    players: PLAYERS,
+    exercises,
+    matchHistory,
+    currentMatch: JSON.parse(localStorage.getItem(CURRENT_MATCH_KEY) || "null")
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `fotbollstranaren-backup-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function importAppData(file) {
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(String(reader.result || ""));
+      if (!Array.isArray(data.players) || !data.exercises || !Array.isArray(data.matchHistory)) {
+        throw new Error("Ogiltig backup");
+      }
+
+      if (!confirm("Importera denna backup? Nuvarande spelare, övningar, historik och pågående match ersätts.")) return;
+
+      localStorage.setItem("fotbollstranaren-players", JSON.stringify(data.players));
+      localStorage.setItem("fotbollstranaren-exercises", JSON.stringify(data.exercises));
+      localStorage.setItem("fotbollstranaren-match-history", JSON.stringify(data.matchHistory));
+      if (data.currentMatch) {
+        localStorage.setItem(CURRENT_MATCH_KEY, JSON.stringify(data.currentMatch));
+      } else {
+        localStorage.removeItem(CURRENT_MATCH_KEY);
+      }
+      location.reload();
+    } catch {
+      alert("Backupfilen kunde inte läsas.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+function initDataTools() {
+  const exportBtn = document.getElementById("exportDataBtn");
+  const importBtn = document.getElementById("importDataBtn");
+  const fileInput = document.getElementById("importDataFile");
+
+  if (exportBtn) exportBtn.onclick = exportAppData;
+  if (importBtn && fileInput) {
+    importBtn.onclick = () => fileInput.click();
+    fileInput.onchange = () => {
+      importAppData(fileInput.files?.[0]);
+      fileInput.value = "";
+    };
+  }
 }
 
 function initHistory() {
@@ -1273,6 +1700,7 @@ function switchHalf(nextHalf) {
   renderLineupPanel();
   updatePlaytimeStats();
   if (wasRunning) startStopwatch();
+  saveCurrentMatchState();
 }
 
 function resetCurrentHalf() {
@@ -1319,8 +1747,10 @@ function initStopwatch() {
 }
 
 document.getElementById("resetAllBtn").onclick = () => {
+  if (!confirm("Återställ spelare, övningar och aktuell match till standard? Historiken sparas.")) return;
   selectedPlaytimePlayer = null;
   resetMatchScore();
+  clearCurrentMatchState();
   PLAYERS = [...DEFAULT_PLAYERS];
   Object.keys(playerStats).forEach(name => delete playerStats[name]);
   PLAYERS.forEach(name => playerStats[name] = createEmptyPlayerStats());
@@ -1352,7 +1782,21 @@ wireTrainingTools();
 initStopwatch();
 initPlayerManager();
 initHistory();
+initDataTools();
 renderExerciseList();
 loadExercise();
-resetMatch();
+
+autoSaveReady = false;
+if (!restoreCurrentMatchState()) {
+  resetMatch();
+}
+autoSaveReady = true;
+saveCurrentMatchState();
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && stopwatchStartedAt) pauseStopwatch();
+  saveCurrentMatchState();
+});
+window.addEventListener("beforeunload", saveCurrentMatchState);
+
 initVersionTracker();
