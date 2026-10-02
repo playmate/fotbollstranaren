@@ -2929,3 +2929,68 @@ button.secondary:hover {
 .danger-btn:active {
   background: #a92a2a;
 }
+
+
+/* v1.6.13 - larger match players with live play/bench time */
+#matchPitch .player-token:not(.opponent):not(.coach) {
+  width: 74px;
+  height: 74px;
+}
+
+#matchPitch .player-token:not(.opponent):not(.coach) .match-indicator {
+  font-size: 27px;
+}
+
+.match-player-live-time {
+  position: absolute;
+  left: calc(100% + 7px);
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 42px;
+  padding: 3px 6px;
+  border-radius: 7px;
+  background: rgba(13, 25, 20, .92);
+  border: 1px solid rgba(255,255,255,.28);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.lineup-bench .bench-player {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+}
+
+.match-bench-live-time {
+  justify-self: end;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  #matchPitch .player-token:not(.opponent):not(.coach) {
+    width: 70px;
+    height: 70px;
+  }
+
+  #matchPitch .player-token:not(.opponent):not(.coach) .match-indicator {
+    font-size: 25px;
+  }
+
+  .match-player-live-time {
+    left: calc(100% + 4px);
+    min-width: 38px;
+    padding: 3px 5px;
+    font-size: 9px;
+  }
+
+  .match-bench-live-time {
+    font-size: 9px;
+  }
+}
