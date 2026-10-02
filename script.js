@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.35";
+const APP_VERSION = "v1.6.36";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -852,7 +852,6 @@ function renderPlaytimeRoster() {
     <section class="playtime-group-card ${className}">
       <div class="playtime-group-head">
         <h4>${title}</h4>
-        <span>${playersInGroup.length}</span>
       </div>
       <div class="playtime-group-list">
         ${playersInGroup.length
