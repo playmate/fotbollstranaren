@@ -2628,3 +2628,23 @@ button.secondary:hover {
     padding-left: 8px;
   }
 }
+
+
+/* v1.6.3 - three clear playtime actions */
+.playtime-action-buttons {
+  flex-wrap: wrap;
+}
+
+.playtime-action-buttons button {
+  min-height: 38px;
+}
+
+@media (max-width: 760px) {
+  .playtime-action-buttons {
+    width: 100%;
+  }
+
+  .playtime-action-buttons button {
+    flex: 1 1 140px;
+  }
+}
