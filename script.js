@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.34";
+const APP_VERSION = "v1.6.35";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -790,8 +790,9 @@ function renderPlaytimeRoster() {
       halfTime: getLivePlayerHalfSeconds(name, currentHalf),
       totalTime: getLivePlayerTotalSeconds(name),
       benchHalfTime: getLivePlayerBenchHalfSeconds(name, currentHalf),
+      benchStintTime: snapshot.location === "bench" ? getLiveBenchStintSeconds(name) : 0,
       keeperTime: getLivePlayerKeeperTotalSeconds(name),
-      stintTime: snapshot.location === "pitch" && snapshot.role !== "MV" ? getLiveStintSeconds(name) : 0,
+      stintTime: snapshot.location === "pitch" ? getLiveStintSeconds(name) : 0,
       stintState: snapshot.location === "pitch" && snapshot.role !== "MV" ? getSubstitutionTimerState(getLiveStintSeconds(name)) : "",
       goals: getGoalCount(name)
     };
@@ -816,9 +817,7 @@ function renderPlaytimeRoster() {
     const role = player.role
       ? `<span class="lineup-role ${player.role === "MV" ? "goalkeeper-role" : ""}">${player.role === "MV" ? "Målvakt" : player.role}</span>`
       : "";
-    const benchInfo = player.location === "bench"
-      ? `<span class="playtime-bench-detail">${fmtTime(player.benchHalfTime)} på bänk</span>`
-      : "";
+    const benchInfo = "";
     const goalsInfo = player.goals > 0
       ? `<span class="playtime-goals">${player.goals} mål</span>`
       : "";
@@ -828,6 +827,7 @@ function renderPlaytimeRoster() {
     const substitutionInfo = player.location === "pitch" && player.role !== "MV"
       ? `<div class="playtime-substitution-time ${player.stintState}">Tid sedan byte: <strong>${fmtTime(player.stintTime)} / ${fmtTime(matchSettings.substitutionMinutes * 60)}</strong></div>`
       : "";
+    const currentCycleTime = player.location === "bench" ? player.benchStintTime : player.stintTime;
 
     return `
       <button type="button" class="playtime-player-row${selected}" data-playtime-player="${player.name}">
@@ -841,6 +841,7 @@ function renderPlaytimeRoster() {
           ${keeperInfo}
           ${substitutionInfo}
         </div>
+        <div class="lineup-time playtime-current-cycle">${fmtTime(currentCycleTime)}</div>
         <div class="lineup-time">${fmtTime(player.halfTime)}</div>
         <div class="lineup-time">${fmtTime(player.totalTime)}</div>
       </button>
