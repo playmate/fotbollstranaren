@@ -2820,3 +2820,35 @@ button.secondary:hover {
     margin-inline: 2px;
   }
 }
+
+
+/* v1.6.9 - recenter clock control and compact team names */
+.match-banner-center {
+  justify-items: center;
+}
+
+.match-clock-toggle {
+  margin-inline: 0;
+  justify-self: center;
+}
+
+.score-team-label,
+.opponent-team-label {
+  font-size: 9px;
+  letter-spacing: .04em;
+}
+
+.opponent-team-label {
+  max-width: 150px;
+}
+
+@media (max-width: 640px) {
+  .score-team-label,
+  .opponent-team-label {
+    font-size: 8px;
+  }
+
+  .opponent-team-label {
+    max-width: 115px;
+  }
+}
