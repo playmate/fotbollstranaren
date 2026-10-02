@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.5.0";
+const APP_VERSION = "v1.5.1";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -738,6 +738,8 @@ function renderPlaytimeRoster() {
       totalTime: getLivePlayerTotalSeconds(name),
       benchHalfTime: getLivePlayerBenchHalfSeconds(name, currentHalf),
       keeperTime: getLivePlayerKeeperTotalSeconds(name),
+      stintTime: snapshot.location === "pitch" && snapshot.role !== "MV" ? getLiveStintSeconds(name) : 0,
+      stintState: snapshot.location === "pitch" && snapshot.role !== "MV" ? getSubstitutionTimerState(getLiveStintSeconds(name)) : "",
       goals: getGoalCount(name)
     };
   });
@@ -769,6 +771,9 @@ function renderPlaytimeRoster() {
     const keeperInfo = player.keeperTime > 0
       ? `<div class="playtime-keeper-time">Tid som målvakt: <strong>${fmtTime(player.keeperTime)}</strong></div>`
       : "";
+    const substitutionInfo = player.location === "pitch" && player.role !== "MV"
+      ? `<div class="playtime-substitution-time ${player.stintState}">Tid sedan byte: <strong>${fmtTime(player.stintTime)} / ${fmtTime(matchSettings.substitutionMinutes * 60)}</strong></div>`
+      : "";
 
     return `
       <button type="button" class="playtime-player-row${selected}" data-playtime-player="${player.name}">
@@ -780,6 +785,7 @@ function renderPlaytimeRoster() {
             ${goalsInfo}
           </div>
           ${keeperInfo}
+          ${substitutionInfo}
         </div>
         <div class="lineup-time">${fmtTime(player.halfTime)}</div>
         <div class="lineup-time">${fmtTime(player.totalTime)}</div>
