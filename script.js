@@ -1,12 +1,21 @@
-const APP_VERSION = "v0.6.1";
+const APP_VERSION = "v0.7.0";
 
-const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
+const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
+let PLAYERS = JSON.parse(localStorage.getItem("fotbollstranaren-players") || "null") || [...DEFAULT_PLAYERS];
 const ROLE_ORDER = {"1":1,"2":2,"3":3,"4":4,"MV":5};
-const playerStats = Object.fromEntries(PLAYERS.map(name => [name, {
-  halves: [0, 0, 0],
-  benchHalves: [0, 0, 0],
-  keeperHalves: [0, 0, 0]
-}]));
+const playerStats = {};
+
+function createEmptyPlayerStats() {
+  return {
+    halves: [0, 0, 0],
+    benchHalves: [0, 0, 0],
+    keeperHalves: [0, 0, 0]
+  };
+}
+
+PLAYERS.forEach(name => {
+  playerStats[name] = createEmptyPlayerStats();
+});
 
 const exercises = {
   passing: [
@@ -90,7 +99,6 @@ function setTabs() {
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(btn.dataset.tab).classList.add("active");
-    if (btn.dataset.tab === "statistics") renderStatistics();
   }));
 }
 
@@ -526,43 +534,11 @@ function updatePlaytimeStats() {
   renderStatistics();
 }
 
-function renderStatistics() {
-  const body = document.getElementById("statisticsBody");
-  const sorted = getSortedPlayerStats();
-
-  if (body) {
-    body.innerHTML = sorted.map(player => `
-      <tr>
-        <td><strong>${player.name}</strong></td>
-        <td>${fmtTime(player.halves[0])}</td>
-        <td>${fmtTime(player.halves[1])}</td>
-        <td>${fmtTime(player.halves[2])}</td>
-        <td>${fmtTime(player.total)}</td>
-        <td>${fmtTime(player.benchTotal)}</td>
-        <td>${fmtTime(player.keeperTotal)}</td>
-        <td class="${player.active ? "statistics-status-active" : ""}">${player.active ? "På plan" : "Bänk"}</td>
-      </tr>
-    `).join("");
-  }
-
-  const halfTimes = halfElapsedMs.map((ms, index) =>
-    ms + (stopwatchStartedAt && currentHalf === index ? Date.now() - stopwatchStartedAt : 0)
-  );
-
-  const half1 = document.getElementById("statsHalf1");
-  const half2 = document.getElementById("statsHalf2");
-  const half3 = document.getElementById("statsHalf3");
-  const total = document.getElementById("statsMatchTotal");
-
-  if (half1) half1.textContent = fmtTime(halfTimes[0] / 1000);
-  if (half2) half2.textContent = fmtTime(halfTimes[1] / 1000);
-  if (half3) half3.textContent = fmtTime(halfTimes[2] / 1000);
-  if (total) total.textContent = fmtTime(halfTimes.reduce((sum, ms) => sum + ms, 0) / 1000);
-}
+function renderStatistics() {}
 
 function updateMatchInfo() {
   renderLineupPanel();
-  renderStatistics();
+  renderPlayerManager();
 }
 
 function resetPlayerStats() {
@@ -579,11 +555,26 @@ function resetMatch() {
   const bench = document.getElementById("bench");
   pitch.querySelectorAll(".token").forEach(x => x.remove());
   bench.innerHTML = "";
-  matchInitial.pitchPlayers.forEach(p => placeToken(pitch, createToken("player", {name:p.name, indicator:p.indicator}), p.x, p.y));
-  matchInitial.benchPlayers.forEach(addPlayerToBench);
-  matchInitial.opponents.forEach(p => placeToken(pitch, createToken("player", {name:"Motståndare", indicator:p.indicator, opponent:true}), p.x, p.y));
+
+  const placed = new Set();
+
+  matchInitial.pitchPlayers.forEach(p => {
+    if (!PLAYERS.includes(p.name) || placed.size >= 5) return;
+    placeToken(pitch, createToken("player", {name:p.name, indicator:p.indicator}), p.x, p.y);
+    placed.add(p.name);
+  });
+
+  PLAYERS.forEach(name => {
+    if (!placed.has(name)) addPlayerToBench(name);
+  });
+
+  matchInitial.opponents.forEach(p =>
+    placeToken(pitch, createToken("player", {name:"Motståndare", indicator:p.indicator, opponent:true}), p.x, p.y)
+  );
+
   placeToken(pitch, createToken("ball"), matchInitial.ball.x, matchInitial.ball.y);
   updateMatchInfo();
+  renderPlayerManager();
 }
 
 function wireMatchTools() {
@@ -592,22 +583,117 @@ function wireMatchTools() {
   document.getElementById("clearOppBtn").onclick = () => { pitch.querySelectorAll(".opponent").forEach(x => x.remove()); updateMatchInfo(); };
 }
 
-function renderPlayerCards() {
-  const root = document.getElementById("playerCards");
-  root.innerHTML = PLAYERS.map(name => `
-    <div class="player-card">
-      <div class="player-avatar">${name[0]}</div>
-      <h3>${name}</h3>
-      <p>Spelare</p>
-      <p><strong>Speltid:</strong> <span data-player-card-time="${name}">${fmtTime(getPlayerTotalSeconds(name))}</span></p>
-    </div>`).join("");
+function savePlayers() {
+  localStorage.setItem("fotbollstranaren-players", JSON.stringify(PLAYERS));
+}
+
+function getPlayerLocation(name) {
+  const pitchPlayer = [...document.querySelectorAll('#matchPitch .player-token:not(.opponent):not(.coach)')]
+    .find(el => el.dataset.name === name);
+  if (pitchPlayer) return pitchPlayer.dataset.indicator === "MV" ? "På plan · MV" : "På plan";
+
+  const benchPlayer = [...document.querySelectorAll('#bench .bench-player')]
+    .find(el => el.dataset.name === name);
+  if (benchPlayer) return "På bänken";
+
+  return "Inte i uppställning";
+}
+
+function renderPlayerManager() {
+  const root = document.getElementById("playerManagerList");
+  const count = document.getElementById("playerCount");
+  if (count) count.textContent = String(PLAYERS.length);
+  if (!root) return;
+
+  root.innerHTML = PLAYERS.map(name => {
+    const location = getPlayerLocation(name);
+    const statusClass = location.startsWith("På plan") ? "on-pitch" : "on-bench";
+
+    return `
+      <div class="player-manager-row">
+        <div class="player-manager-main">
+          <div class="player-manager-avatar">${name[0]?.toUpperCase() || "?"}</div>
+          <div>
+            <strong>${name}</strong>
+            <span class="lineup-status ${statusClass}">${location}</span>
+          </div>
+        </div>
+        <button class="remove-player-btn" type="button" data-remove-player="${name}">Ta bort</button>
+      </div>
+    `;
+  }).join("");
+
+  root.querySelectorAll("[data-remove-player]").forEach(btn => {
+    btn.onclick = () => removePlayer(btn.dataset.removePlayer);
+  });
+}
+
+function addRosterPlayer(name) {
+  const cleanName = name.trim().replace(/\s+/g, " ");
+  const message = document.getElementById("playerFormMessage");
+
+  if (!cleanName) {
+    if (message) message.textContent = "Skriv ett namn.";
+    return;
+  }
+
+  if (PLAYERS.some(player => player.toLowerCase() === cleanName.toLowerCase())) {
+    if (message) message.textContent = "Spelaren finns redan.";
+    return;
+  }
+
+  PLAYERS.push(cleanName);
+  playerStats[cleanName] = createEmptyPlayerStats();
+  savePlayers();
+
+  const bench = document.getElementById("bench");
+  if (bench) addPlayerToBench(cleanName);
+
+  if (message) message.textContent = `${cleanName} lades till på bänken.`;
+  renderPlayerManager();
+  updateMatchInfo();
+}
+
+function removePlayer(name) {
+  if (!PLAYERS.includes(name)) return;
+
+  const wasRunning = Boolean(stopwatchStartedAt);
+  if (wasRunning) pauseStopwatch();
+
+  document.querySelectorAll('#matchPitch .player-token:not(.opponent):not(.coach), #bench .bench-player').forEach(el => {
+    if (el.dataset.name === name) el.remove();
+  });
+
+  PLAYERS = PLAYERS.filter(player => player !== name);
+  delete playerStats[name];
+  savePlayers();
+
+  renderPlayerManager();
+  updateMatchInfo();
+
+  if (wasRunning) startStopwatch();
+}
+
+function initPlayerManager() {
+  const form = document.getElementById("addPlayerForm");
+  const input = document.getElementById("newPlayerName");
+
+  if (form && input) {
+    form.onsubmit = event => {
+      event.preventDefault();
+      addRosterPlayer(input.value);
+      if (PLAYERS.some(player => player.toLowerCase() === input.value.trim().toLowerCase())) {
+        input.value = "";
+      }
+      input.focus();
+    };
+  }
+
+  renderPlayerManager();
 }
 
 function updatePlayerCardsTimes() {
-  document.querySelectorAll('[data-player-card-time]').forEach(el => {
-    const name = el.getAttribute('data-player-card-time');
-    el.textContent = fmtTime(getPlayerTotalSeconds(name));
-  });
+  renderPlayerManager();
 }
 
 function setTrainingCategory() {
@@ -763,10 +849,19 @@ function initStopwatch() {
 }
 
 document.getElementById("resetAllBtn").onclick = () => {
+  PLAYERS = [...DEFAULT_PLAYERS];
+  Object.keys(playerStats).forEach(name => delete playerStats[name]);
+  PLAYERS.forEach(name => playerStats[name] = createEmptyPlayerStats());
+  savePlayers();
+
   resetMatch();
-  currentCategory = "passing"; currentExerciseIndex = 0;
+  currentCategory = "passing";
+  currentExerciseIndex = 0;
   document.querySelectorAll(".subtab").forEach((b,i) => b.classList.toggle("active", i===0));
-  renderExerciseList(); loadExercise(); resetAllMatchTimeAndStats();
+  renderExerciseList();
+  loadExercise();
+  resetAllMatchTimeAndStats();
+  renderPlayerManager();
 };
 
 function initVersionTracker() {
@@ -780,7 +875,7 @@ setTrainingCategory();
 wireMatchTools();
 wireTrainingTools();
 initStopwatch();
-renderPlayerCards();
+initPlayerManager();
 renderExerciseList();
 loadExercise();
 resetMatch();
