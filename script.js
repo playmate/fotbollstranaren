@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.3.9";
+const APP_VERSION = "v0.3.10";
 
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
@@ -231,6 +231,16 @@ function getOwnPitchPlayerAtPoint(clientX, clientY, excludeEl = null) {
   }) || null;
 }
 
+function getBenchPlayerAtPoint(clientX, clientY, excludeEl = null) {
+  const candidates = [...document.querySelectorAll('#bench .player-token')]
+    .filter(player => player !== excludeEl);
+
+  return candidates.find(player => {
+    const rect = player.getBoundingClientRect();
+    return pointInside(rect, clientX, clientY);
+  }) || null;
+}
+
 function clearSwapTarget() {
   document.querySelectorAll(".swap-target").forEach(el => el.classList.remove("swap-target"));
 }
@@ -245,6 +255,15 @@ function makeDraggable(el) {
 
     if (!fromBench && !fromPitch) return;
     if (fromBench && el.dataset.type !== "player") return;
+
+    const isOwnPitchPlayer =
+      fromPitch &&
+      originParent.id === "matchPitch" &&
+      el.dataset.type === "player" &&
+      !el.classList.contains("opponent") &&
+      !el.classList.contains("coach");
+
+    const isGoalkeeper = isOwnPitchPlayer && el.dataset.indicator === "MV";
 
     const originLeft = el.style.left;
     const originTop = el.style.top;
@@ -261,17 +280,26 @@ function makeDraggable(el) {
 
     let currentSwapTarget = null;
 
+    const setSwapTarget = target => {
+      if (target === currentSwapTarget) return;
+      clearSwapTarget();
+      currentSwapTarget = target;
+      if (currentSwapTarget) currentSwapTarget.classList.add("swap-target");
+    };
+
     const move = ev => {
       el.style.left = `${ev.clientX}px`;
       el.style.top = `${ev.clientY}px`;
 
       if (fromBench) {
-        const target = getOwnPitchPlayerAtPoint(ev.clientX, ev.clientY, el);
-        if (target !== currentSwapTarget) {
-          clearSwapTarget();
-          currentSwapTarget = target;
-          if (currentSwapTarget) currentSwapTarget.classList.add("swap-target");
-        }
+        setSwapTarget(getOwnPitchPlayerAtPoint(ev.clientX, ev.clientY, el));
+        return;
+      }
+
+      if (isGoalkeeper) {
+        const pitchTarget = getOwnPitchPlayerAtPoint(ev.clientX, ev.clientY, el);
+        const benchTarget = getBenchPlayerAtPoint(ev.clientX, ev.clientY, el);
+        setSwapTarget(pitchTarget || benchTarget);
       }
     };
 
@@ -347,6 +375,51 @@ function makeDraggable(el) {
         restoreToOrigin();
         updateMatchInfo();
         return;
+      }
+
+      if (isGoalkeeper) {
+        const pitchTarget = getOwnPitchPlayerAtPoint(ev.clientX, ev.clientY, el);
+        const benchTarget = getBenchPlayerAtPoint(ev.clientX, ev.clientY, el);
+
+        if (pitchTarget) {
+          const keeperName = el.dataset.name;
+          const targetName = pitchTarget.dataset.name;
+          const targetIndicator = pitchTarget.dataset.indicator;
+          const targetLeft = pitchTarget.style.left;
+          const targetTop = pitchTarget.style.top;
+
+          setMatchPlayerIndicator(pitchTarget, "MV", targetName);
+          pitchTarget.style.left = originLeft;
+          pitchTarget.style.top = originTop;
+
+          setMatchPlayerIndicator(el, targetIndicator, keeperName);
+          matchPitch.appendChild(el);
+          el.style.left = targetLeft;
+          el.style.top = targetTop;
+
+          clearSwapTarget();
+          updateMatchInfo();
+          return;
+        }
+
+        if (benchTarget) {
+          const keeperName = el.dataset.name;
+          const newKeeperName = benchTarget.dataset.name;
+
+          benchTarget.remove();
+          setMatchPlayerIndicator(benchTarget, "MV", newKeeperName);
+          matchPitch.appendChild(benchTarget);
+          benchTarget.classList.remove("bench-player");
+          benchTarget.style.left = originLeft;
+          benchTarget.style.top = originTop;
+
+          el.remove();
+          addPlayerToBench(keeperName);
+
+          clearSwapTarget();
+          updateMatchInfo();
+          return;
+        }
       }
 
       const canGoToBench =
