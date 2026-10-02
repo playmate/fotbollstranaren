@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.22";
+const APP_VERSION = "v1.6.23";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -2308,14 +2308,15 @@ function pauseStopwatch() {
 
 function switchHalf(nextHalf) {
   if (nextHalf < 0 || nextHalf >= matchSettings.periodCount || nextHalf === currentHalf) return;
-  const wasRunning = Boolean(stopwatchStartedAt);
-  if (wasRunning) pauseStopwatch();
+
+  // Switching to another half/period always pauses the match clock.
+  if (stopwatchStartedAt) pauseStopwatch();
+
   currentHalf = nextHalf;
   updateHalfUI();
   updateStopwatchDisplay();
   renderLineupPanel();
   updatePlaytimeStats();
-  if (wasRunning) startStopwatch();
   saveCurrentMatchState();
 }
 
