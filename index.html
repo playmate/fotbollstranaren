@@ -4,16 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=0.7.2" />
+  <link rel="stylesheet" href="style.css?v=0.8.0" />
 </head>
 <body data-theme="dark">
   <div id="versionTracker" class="version-tracker" title="Versionsstatus">
     <span class="version-dot"></span>
-    <span id="versionText">Version v0.7.2</span>
+    <span id="versionText">Version v0.8.0</span>
   </div>
 
   <nav class="tabs">
     <button class="tab active" data-tab="match">Match</button>
+    <button class="tab" data-tab="playtime">Speltid</button>
     <button class="tab" data-tab="training">Träning</button>
     <button class="tab" data-tab="players">Spelare</button>
   </nav>
@@ -45,42 +46,68 @@
         </div>
 
         <aside class="side-panel">
-          <div class="panel lineup-panel">
+          <div class="panel match-bench-panel">
             <div class="lineup-panel-head">
-              <h3>Uppställning</h3>
-              <span id="halfLabel" class="half-label">Halvlek 1 av 3</span>
+              <h3>Bänk</h3>
+              <span id="matchBenchCount" class="half-label"></span>
             </div>
-
-            <div class="half-tabs" id="halfTabs">
-              <button class="half-btn active" data-half="0">1</button>
-              <button class="half-btn" data-half="1">2</button>
-              <button class="half-btn" data-half="2">3</button>
-            </div>
-
-            <div class="lineup-timer-row">
-              <div>
-                <div class="lineup-timer-label">Tid i vald halvlek</div>
-                <div id="stopwatchDisplay" class="stopwatch-display">00:00</div>
-              </div>
-              <div class="stopwatch-actions">
-                <button id="stopwatchToggle">Starta</button>
-                <button id="stopwatchReset" class="secondary">Nollställ</button>
-              </div>
-            </div>
-
-            <div class="lineup-columns">
-              <span>Spelare</span>
-              <span id="lineupHalfColumn">H1</span>
-              <span>Totalt</span>
-            </div>
-
-            <div id="activeLineupRows" class="lineup-list lineup-active-list"></div>
-
             <div id="bench" class="bench lineup-list lineup-bench dropzone"></div>
-            <div class="hint">Dra mellan planen och listan, eller släpp på en spelare för direkt byte.</div>
+            <div class="hint">Dra en spelare till planen, eller släpp på en spelare för direkt byte.</div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="playtime" class="page">
+      <div class="page-title-row">
+        <div>
+          <h2>Speltid</h2>
+          <p>Klicka på en spelare för att markera. Klicka sedan på en annan spelare för att byta.</p>
+        </div>
+      </div>
+
+      <div class="playtime-page-layout">
+        <div class="panel playtime-control-panel">
+          <div class="lineup-panel-head">
+            <h3>Halvlek och tid</h3>
+            <span id="halfLabel" class="half-label">Halvlek 1 av 3</span>
           </div>
 
-        </aside>
+          <div class="half-tabs" id="halfTabs">
+            <button class="half-btn active" data-half="0">1</button>
+            <button class="half-btn" data-half="1">2</button>
+            <button class="half-btn" data-half="2">3</button>
+          </div>
+
+          <div class="lineup-timer-row">
+            <div>
+              <div class="lineup-timer-label">Tid i vald halvlek</div>
+              <div id="stopwatchDisplay" class="stopwatch-display">00:00</div>
+            </div>
+            <div class="stopwatch-actions">
+              <button id="stopwatchToggle">Starta</button>
+              <button id="stopwatchReset" class="secondary">Nollställ</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel playtime-swap-panel">
+          <div class="playtime-swap-head">
+            <div>
+              <h3>Spelare</h3>
+              <p id="playtimeSwapHint">Välj en spelare att byta.</p>
+            </div>
+            <button id="clearPlaytimeSelection" class="secondary compact-btn" type="button">Avmarkera</button>
+          </div>
+
+          <div class="playtime-columns">
+            <span>Spelare</span>
+            <span id="lineupHalfColumn">H1</span>
+            <span>Totalt</span>
+          </div>
+
+          <div id="playtimeRoster" class="playtime-click-roster"></div>
+        </div>
       </div>
     </section>
 
@@ -163,6 +190,6 @@
 
   </main>
 
-  <script src="script.js?v=0.7.2"></script>
+  <script src="script.js?v=0.8.0"></script>
 </body>
 </html>
