@@ -1,5 +1,3 @@
-const APP_VERSION = "v0.3.11";
-
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 
@@ -140,19 +138,19 @@ let currentExerciseIndex = 0;
 
 const matchInitial = {
   pitchPlayers: [
-    {name:"Liam", indicator:"1", x:50, y:55},
-    {name:"Ian", indicator:"2", x:28, y:68},
-    {name:"Erik", indicator:"3", x:72, y:68},
-    {name:"Frans", indicator:"4", x:50, y:80},
-    {name:"Endrit", indicator:"MV", x:50, y:94}
+    {name:"Liam", x:30, y:68},
+    {name:"Finn", x:70, y:68},
+    {name:"Charles", x:50, y:54},
+    {name:"Erik", x:35, y:38},
+    {name:"Ian", x:50, y:90}
   ],
-  benchPlayers: ["Finn","Charles","John"],
+  benchPlayers: ["Frans","Endrit","John"],
   opponents: [
-    {indicator:"1", x:30, y:28},
-    {indicator:"2", x:70, y:28},
-    {indicator:"3", x:50, y:40},
-    {indicator:"4", x:50, y:18},
-    {indicator:"MV", x:50, y:8}
+    {x:30, y:28},
+    {x:70, y:28},
+    {x:50, y:40},
+    {x:62, y:16},
+    {x:50, y:8}
   ],
   ball: {x:50, y:50}
 };
@@ -175,13 +173,8 @@ function createToken(type, opts = {}) {
 
   if (type === "player") {
     el.className = "token player-token";
+    el.textContent = opts.name || "Spelare";
     el.dataset.name = opts.name || "Spelare";
-    if (opts.indicator) {
-      el.dataset.indicator = opts.indicator;
-      el.innerHTML = `<span class="match-indicator">${opts.indicator}</span>${opts.opponent ? "" : `<span class="match-player-name">${opts.name || "Spelare"}</span>`}`;
-    } else {
-      el.textContent = opts.name || "Spelare";
-    }
     if (opts.opponent) el.classList.add("opponent");
   }
   if (type === "coach") {
@@ -208,264 +201,40 @@ function placeToken(container, el, x, y) {
   el.style.top = `${y}%`;
 }
 
-function pointInside(rect, x, y) {
-  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
-}
-
-function placeFromPointer(container, el, clientX, clientY) {
-  const rect = container.getBoundingClientRect();
-  let x = ((clientX - rect.left) / rect.width) * 100;
-  let y = ((clientY - rect.top) / rect.height) * 100;
-  x = Math.max(3, Math.min(97, x));
-  y = Math.max(3, Math.min(97, y));
-  placeToken(container, el, x, y);
-}
-
-function getOwnPitchPlayerAtPoint(clientX, clientY, excludeEl = null) {
-  const candidates = [...document.querySelectorAll('#matchPitch .player-token:not(.opponent):not(.coach)')]
-    .filter(player => player !== excludeEl);
-
-  return candidates.find(player => {
-    const rect = player.getBoundingClientRect();
-    return pointInside(rect, clientX, clientY);
-  }) || null;
-}
-
-function getBenchPlayerAtPoint(clientX, clientY, excludeEl = null) {
-  const candidates = [...document.querySelectorAll('#bench .player-token')]
-    .filter(player => player !== excludeEl);
-
-  return candidates.find(player => {
-    const rect = player.getBoundingClientRect();
-    return pointInside(rect, clientX, clientY);
-  }) || null;
-}
-
-function clearSwapTarget() {
-  document.querySelectorAll(".swap-target").forEach(el => el.classList.remove("swap-target"));
-}
-
 function makeDraggable(el) {
   el.addEventListener("pointerdown", e => {
-    e.preventDefault();
-
-    const originParent = el.parentElement;
-    const fromBench = originParent?.id === "bench";
-    const fromPitch = originParent?.classList.contains("pitch");
-
-    if (!fromBench && !fromPitch) return;
-    if (fromBench && el.dataset.type !== "player") return;
-
-    const isOwnPitchPlayer =
-      fromPitch &&
-      originParent.id === "matchPitch" &&
-      el.dataset.type === "player" &&
-      !el.classList.contains("opponent") &&
-      !el.classList.contains("coach");
-
-    const isGoalkeeper = isOwnPitchPlayer && el.dataset.indicator === "MV";
-
-    const originLeft = el.style.left;
-    const originTop = el.style.top;
-    const tokenRect = el.getBoundingClientRect();
-    const matchPitch = document.getElementById("matchPitch");
-    const bench = document.getElementById("bench");
-
-    el.classList.add("dragging", "dragging-floating");
-    if (fromBench) {
-      el.classList.add("bench-drag-preview");
-      el.style.width = "";
-      el.style.height = "";
-    } else {
-      el.style.width = `${tokenRect.width}px`;
-      el.style.height = `${tokenRect.height}px`;
-    }
-    el.style.left = `${e.clientX}px`;
-    el.style.top = `${e.clientY}px`;
-    document.body.appendChild(el);
-
-    let currentSwapTarget = null;
-
-    const setSwapTarget = target => {
-      if (target === currentSwapTarget) return;
-      clearSwapTarget();
-      currentSwapTarget = target;
-      if (currentSwapTarget) currentSwapTarget.classList.add("swap-target");
-    };
+    if (el.parentElement?.id === "bench") return;
+    el.setPointerCapture(e.pointerId);
+    el.classList.add("dragging");
 
     const move = ev => {
-      el.style.left = `${ev.clientX}px`;
-      el.style.top = `${ev.clientY}px`;
-
-      if (fromBench) {
-        setSwapTarget(getOwnPitchPlayerAtPoint(ev.clientX, ev.clientY, el));
-        return;
-      }
-
-      if (isGoalkeeper) {
-        const pitchTarget = getOwnPitchPlayerAtPoint(ev.clientX, ev.clientY, el);
-        const benchTarget = getBenchPlayerAtPoint(ev.clientX, ev.clientY, el);
-        setSwapTarget(pitchTarget || benchTarget);
-      }
+      const container = el.parentElement;
+      if (!container || !container.classList.contains("pitch")) return;
+      const rect = container.getBoundingClientRect();
+      let x = ((ev.clientX - rect.left) / rect.width) * 100;
+      let y = ((ev.clientY - rect.top) / rect.height) * 100;
+      x = Math.max(3, Math.min(97, x));
+      y = Math.max(3, Math.min(97, y));
+      el.style.left = `${x}%`;
+      el.style.top = `${y}%`;
     };
 
-    const restoreToOrigin = () => {
-      clearSwapTarget();
-      el.classList.remove("dragging", "dragging-floating", "bench-drag-preview");
-      el.style.width = "";
-      el.style.height = "";
+    const up = ev => {
+      el.releasePointerCapture?.(e.pointerId);
+      el.classList.remove("dragging");
+      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", up);
+      el.removeEventListener("pointercancel", up);
 
-      originParent.appendChild(el);
-
-      if (fromBench) {
-        el.classList.add("bench-player");
-        el.style.left = "";
-        el.style.top = "";
-      } else {
-        el.style.left = originLeft;
-        el.style.top = originTop;
+      if (el.dataset.type === "player" && !el.classList.contains("opponent")) {
+        maybeMoveToBench(ev, el);
       }
-    };
-
-    const finish = ev => {
-      document.removeEventListener("pointermove", move);
-      document.removeEventListener("pointerup", finish);
-      document.removeEventListener("pointercancel", cancel);
-
-      el.classList.remove("dragging", "dragging-floating", "bench-drag-preview");
-      el.style.width = "";
-      el.style.height = "";
-
-      if (fromBench) {
-        const swapTarget = getOwnPitchPlayerAtPoint(ev.clientX, ev.clientY, el);
-
-        if (swapTarget) {
-          const indicator = swapTarget.dataset.indicator;
-          const targetLeft = swapTarget.style.left;
-          const targetTop = swapTarget.style.top;
-          const targetName = swapTarget.dataset.name;
-
-          swapTarget.remove();
-          addPlayerToBench(targetName);
-
-          setMatchPlayerIndicator(el, indicator, el.dataset.name);
-          matchPitch.appendChild(el);
-          el.classList.remove("bench-player");
-          el.style.left = targetLeft;
-          el.style.top = targetTop;
-
-          clearSwapTarget();
-          updateMatchInfo();
-          return;
-        }
-
-        clearSwapTarget();
-
-        if (pointInside(matchPitch.getBoundingClientRect(), ev.clientX, ev.clientY)) {
-          const playerCount = matchPitch.querySelectorAll('.player-token:not(.opponent):not(.coach)').length;
-
-          if (playerCount >= 5) {
-            restoreToOrigin();
-            alert("Det är redan 5 egna spelare på planen. Släpp spelaren på en aktiv spelare för att byta.");
-            updateMatchInfo();
-            return;
-          }
-
-          const indicator = getNextOwnIndicator();
-          setMatchPlayerIndicator(el, indicator, el.dataset.name);
-          placeFromPointer(matchPitch, el, ev.clientX, ev.clientY);
-          updateMatchInfo();
-          return;
-        }
-
-        restoreToOrigin();
-        updateMatchInfo();
-        return;
-      }
-
-      if (isGoalkeeper) {
-        const pitchTarget = getOwnPitchPlayerAtPoint(ev.clientX, ev.clientY, el);
-        const benchTarget = getBenchPlayerAtPoint(ev.clientX, ev.clientY, el);
-
-        if (pitchTarget) {
-          const keeperName = el.dataset.name;
-          const targetName = pitchTarget.dataset.name;
-          const targetIndicator = pitchTarget.dataset.indicator;
-          const targetLeft = pitchTarget.style.left;
-          const targetTop = pitchTarget.style.top;
-
-          setMatchPlayerIndicator(pitchTarget, "MV", targetName);
-          pitchTarget.style.left = originLeft;
-          pitchTarget.style.top = originTop;
-
-          setMatchPlayerIndicator(el, targetIndicator, keeperName);
-          matchPitch.appendChild(el);
-          el.style.left = targetLeft;
-          el.style.top = targetTop;
-
-          clearSwapTarget();
-          updateMatchInfo();
-          return;
-        }
-
-        if (benchTarget) {
-          const keeperName = el.dataset.name;
-          const newKeeperName = benchTarget.dataset.name;
-
-          benchTarget.remove();
-          setMatchPlayerIndicator(benchTarget, "MV", newKeeperName);
-          matchPitch.appendChild(benchTarget);
-          benchTarget.classList.remove("bench-player");
-          benchTarget.style.left = originLeft;
-          benchTarget.style.top = originTop;
-
-          el.remove();
-          addPlayerToBench(keeperName);
-
-          clearSwapTarget();
-          updateMatchInfo();
-          return;
-        }
-      }
-
-      const canGoToBench =
-        originParent.id === "matchPitch" &&
-        el.dataset.type === "player" &&
-        !el.classList.contains("opponent") &&
-        !el.classList.contains("coach");
-
-      if (canGoToBench && pointInside(bench.getBoundingClientRect(), ev.clientX, ev.clientY)) {
-        const name = el.dataset.name;
-        el.remove();
-        addPlayerToBench(name);
-        clearSwapTarget();
-        updateMatchInfo();
-        return;
-      }
-
-      if (pointInside(originParent.getBoundingClientRect(), ev.clientX, ev.clientY)) {
-        placeFromPointer(originParent, el, ev.clientX, ev.clientY);
-      } else {
-        originParent.appendChild(el);
-        el.style.left = originLeft;
-        el.style.top = originTop;
-      }
-
-      clearSwapTarget();
       updateMatchInfo();
     };
 
-    const cancel = () => {
-      document.removeEventListener("pointermove", move);
-      document.removeEventListener("pointerup", finish);
-      document.removeEventListener("pointercancel", cancel);
-      restoreToOrigin();
-      updateMatchInfo();
-    };
-
-    document.addEventListener("pointermove", move);
-    document.addEventListener("pointerup", finish);
-    document.addEventListener("pointercancel", cancel);
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
   });
 }
 
@@ -479,36 +248,18 @@ function maybeMoveToBench(ev, el) {
   }
 }
 
-function getNextOwnIndicator() {
-  const pitch = document.getElementById("matchPitch");
-  const used = new Set(
-    [...pitch.querySelectorAll('.player-token:not(.opponent):not(.coach)')]
-      .map(el => el.dataset.indicator)
-      .filter(Boolean)
-  );
-  return ["1","2","3","4","MV"].find(indicator => !used.has(indicator)) || "1";
-}
-
-function setMatchPlayerIndicator(el, indicator, name) {
-  el.dataset.indicator = indicator;
-  el.innerHTML = `<span class="match-indicator">${indicator}</span><span class="match-player-name">${name}</span>`;
-}
-
 function addPlayerToBench(name) {
   const bench = document.getElementById("bench");
   const el = createToken("player", {name});
   el.classList.add("bench-player");
   el.addEventListener("click", () => {
-    if (el.parentElement?.id !== "bench") return;
     const pitch = document.getElementById("matchPitch");
     const playerCount = pitch.querySelectorAll('.player-token:not(.opponent):not(.coach)').length;
     if (playerCount >= 5) {
       alert("Det är redan 5 egna spelare på planen. Flytta först en spelare till bänken.");
       return;
     }
-    const indicator = getNextOwnIndicator();
-    setMatchPlayerIndicator(el, indicator, name);
-    placeToken(pitch, el, 50, indicator === "MV" ? 90 : 82);
+    placeToken(pitch, el, 50, 82);
     updateMatchInfo();
   });
   bench.appendChild(el);
@@ -521,11 +272,11 @@ function resetMatch() {
   bench.innerHTML = "";
 
   matchInitial.pitchPlayers.forEach(p => {
-    placeToken(pitch, createToken("player", {name:p.name, indicator:p.indicator}), p.x, p.y);
+    placeToken(pitch, createToken("player", {name:p.name}), p.x, p.y);
   });
   matchInitial.benchPlayers.forEach(addPlayerToBench);
-  matchInitial.opponents.forEach(p => {
-    placeToken(pitch, createToken("player", {name:"Motståndare", indicator:p.indicator, opponent:true}), p.x, p.y);
+  matchInitial.opponents.forEach((p, i) => {
+    placeToken(pitch, createToken("player", {name: i === 4 ? "MV" : "Motst.", opponent:true}), p.x, p.y);
   });
   placeToken(pitch, createToken("ball"), matchInitial.ball.x, matchInitial.ball.y);
   updateMatchInfo();
@@ -534,36 +285,14 @@ function resetMatch() {
 function updateMatchInfo() {
   const pitch = document.getElementById("matchPitch");
   const bench = document.getElementById("bench");
-  const ownPlayers = [...pitch.querySelectorAll('.player-token:not(.opponent):not(.coach)')];
-  const benchPlayers = [...bench.querySelectorAll('.player-token')];
-  const own = ownPlayers.length;
+  const own = pitch.querySelectorAll('.player-token:not(.opponent):not(.coach)').length;
   const opp = pitch.querySelectorAll('.player-token.opponent').length;
-  const benchCount = benchPlayers.length;
-
+  const benchCount = bench.querySelectorAll('.player-token').length;
   document.getElementById("matchInfo").innerHTML = `
     <div class="stat"><span>Egna på plan</span><strong>${own}</strong></div>
     <div class="stat"><span>Motståndare</span><strong>${opp}</strong></div>
     <div class="stat"><span>På bänken</span><strong>${benchCount}</strong></div>
   `;
-
-  const activeList = document.getElementById("activePlayersList");
-  const benchList = document.getElementById("benchPlayersList");
-
-  if (activeList) {
-    activeList.innerHTML = ownPlayers
-      .sort((a, b) => {
-        const order = {"1":1,"2":2,"3":3,"4":4,"MV":5};
-        return (order[a.dataset.indicator] || 99) - (order[b.dataset.indicator] || 99);
-      })
-      .map(el => `<div class="roster-chip">${el.dataset.indicator || ""} · ${el.dataset.name}</div>`)
-      .join("");
-  }
-
-  if (benchList) {
-    benchList.innerHTML = benchPlayers
-      .map(el => `<div class="roster-chip">${el.dataset.name}</div>`)
-      .join("");
-  }
 }
 
 function wireMatchTools() {
@@ -575,9 +304,7 @@ function wireMatchTools() {
     updateMatchInfo();
   };
   document.getElementById("addOpponent").onclick = () => {
-    const used = new Set([...pitch.querySelectorAll(".player-token.opponent")].map(el => el.dataset.indicator).filter(Boolean));
-    const indicator = ["1","2","3","4","MV"].find(value => !used.has(value)) || String(used.size + 1);
-    placeToken(pitch, createToken("player", {name:"Motståndare", indicator, opponent:true}), 50, 20);
+    placeToken(pitch, createToken("player", {name:"Motst.", opponent:true}), 50, 20);
     updateMatchInfo();
   };
   document.getElementById("addBall").onclick = () => placeToken(pitch, createToken("ball"), 50, 50);
@@ -591,7 +318,7 @@ function renderPlayerCards() {
     <div class="player-card">
       <div class="player-avatar">${name[0]}</div>
       <h3>${name}</h3>
-      <p>Spelare</p>
+      <p>Spelare • född 2018</p>
     </div>
   `).join("");
 }
@@ -648,81 +375,6 @@ function wireTrainingTools() {
   document.getElementById("exAddCoach").onclick = () => placeToken(pitch, createToken("coach", {name:"Tränare"}), 50, 50);
 }
 
-function applyTheme(theme) {
-  document.body.dataset.theme = theme;
-  const themeToggle = document.getElementById("themeToggle");
-
-  if (themeToggle) {
-    themeToggle.textContent = theme === "dark" ? "☀️ Ljust läge" : "🌙 Mörkt läge";
-  }
-
-  localStorage.setItem("fotbollstranaren-theme", theme);
-}
-
-function initTheme() {
-  const savedTheme = localStorage.getItem("fotbollstranaren-theme");
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const startTheme = savedTheme || (prefersDark ? "dark" : "light");
-
-  applyTheme(startTheme);
-
-  const themeToggle = document.getElementById("themeToggle");
-  if (themeToggle) {
-    themeToggle.onclick = () => {
-      const current = document.body.dataset.theme === "dark" ? "dark" : "light";
-      applyTheme(current === "dark" ? "light" : "dark");
-    };
-  }
-}
-
-function initStopwatch() {
-  const display = document.getElementById("stopwatchDisplay");
-  const toggle = document.getElementById("stopwatchToggle");
-  const reset = document.getElementById("stopwatchReset");
-  if (!display || !toggle || !reset) return;
-
-  let elapsedMs = 0;
-  let startedAt = null;
-  let timerId = null;
-
-  const render = () => {
-    const totalMs = elapsedMs + (startedAt ? Date.now() - startedAt : 0);
-    const totalSeconds = Math.floor(totalMs / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    display.textContent = `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
-  };
-
-  const stop = () => {
-    if (!startedAt) return;
-    elapsedMs += Date.now() - startedAt;
-    startedAt = null;
-    clearInterval(timerId);
-    timerId = null;
-    toggle.textContent = "Starta";
-    render();
-  };
-
-  toggle.onclick = () => {
-    if (startedAt) {
-      stop();
-    } else {
-      startedAt = Date.now();
-      timerId = setInterval(render, 250);
-      toggle.textContent = "Pausa";
-      render();
-    }
-  };
-
-  reset.onclick = () => {
-    elapsedMs = 0;
-    startedAt = startedAt ? Date.now() : null;
-    render();
-  };
-
-  render();
-}
-
 document.getElementById("resetAllBtn").onclick = () => {
   resetMatch();
   currentCategory = "passing";
@@ -732,25 +384,11 @@ document.getElementById("resetAllBtn").onclick = () => {
   loadExercise();
 };
 
-initTheme();
 setTabs();
 setTrainingCategory();
 wireMatchTools();
 wireTrainingTools();
-initStopwatch();
 renderPlayerCards();
 renderExerciseList();
 loadExercise();
 resetMatch();
-
-
-function initVersionTracker() {
-  const tracker = document.getElementById("versionTracker");
-  const text = document.getElementById("versionText");
-  if (!tracker || !text) return;
-
-  text.textContent = `Version ${APP_VERSION}`;
-  tracker.classList.add("is-current");
-}
-
-initVersionTracker();
