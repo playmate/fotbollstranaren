@@ -3285,3 +3285,12 @@ button.secondary:hover {
     font-size: 9px;
   }
 }
+
+
+/* v1.6.36 - simplify Speltid group headers and de-emphasize half time */
+.playtime-player-row > .lineup-time:nth-child(3),
+.playtime-columns span:nth-child(3) {
+  color: var(--muted);
+  opacity: .58;
+  font-weight: 600;
+}
