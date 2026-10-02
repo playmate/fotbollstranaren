@@ -2162,3 +2162,78 @@ button.secondary:hover {
   width: 100%;
   min-height: 46px;
 }
+
+
+/* v1.3.0 - goalkeeper time and substitution timer */
+.player-manager-copy {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.player-manager-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.player-manager-stats {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.player-manager-stats > span {
+  padding: 4px 7px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #18231d;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.player-manager-stats strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.substitution-clock.on-time {
+  border-color: #365a47;
+}
+
+.substitution-clock.overdue-orange {
+  border-color: #b56f24;
+  background: #3a2917;
+  color: #ffb45d;
+}
+
+.substitution-clock.overdue-orange strong {
+  color: #ffd2a0;
+}
+
+.substitution-clock.overdue-red {
+  border-color: #8a3b3b;
+  background: #3b2020;
+  color: #ff8a8a;
+}
+
+.substitution-clock.overdue-red strong {
+  color: #ffd0d0;
+}
+
+@media (max-width: 640px) {
+  .player-manager-row {
+    align-items: flex-start;
+  }
+
+  .player-manager-main {
+    align-items: flex-start;
+  }
+
+  .player-manager-stats {
+    gap: 5px;
+  }
+}
