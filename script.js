@@ -136,6 +136,9 @@ let objectCounter = 0;
 let currentCategory = "passing";
 let currentExerciseIndex = 0;
 
+const playerPlaytimeMs = Object.fromEntries(PLAYERS.map(name => [name, 0]));
+let playtimeLastTick = null;
+
 const matchInitial = {
   pitchPlayers: [
     {name:"Liam", x:30, y:68},
@@ -282,6 +285,48 @@ function resetMatch() {
   updateMatchInfo();
 }
 
+function formatPlaytime(ms) {
+  const totalSeconds = Math.floor(Math.max(0, ms) / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function getActivePlayerNames() {
+  return [...document.querySelectorAll('#matchPitch .player-token:not(.opponent):not(.coach)')]
+    .map(el => el.dataset.name)
+    .filter(Boolean);
+}
+
+function addActivePlaytime(deltaMs) {
+  if (deltaMs <= 0) return;
+  getActivePlayerNames().forEach(name => {
+    if (Object.prototype.hasOwnProperty.call(playerPlaytimeMs, name)) {
+      playerPlaytimeMs[name] += deltaMs;
+    }
+  });
+}
+
+function renderPlaytimeStats() {
+  const root = document.getElementById("playtimeStats");
+  if (!root) return;
+
+  const active = new Set(getActivePlayerNames());
+  root.innerHTML = PLAYERS.map(name => `
+    <div class="playtime-row">
+      <span class="playtime-name">${name}</span>
+      <span class="playtime-status ${active.has(name) ? "active" : ""}">${active.has(name) ? "På plan" : "Bänk"}</span>
+      <span class="playtime-time">${formatPlaytime(playerPlaytimeMs[name])}</span>
+    </div>
+  `).join("");
+}
+
+function resetPlayerPlaytime() {
+  PLAYERS.forEach(name => playerPlaytimeMs[name] = 0);
+  playtimeLastTick = null;
+  renderPlaytimeStats();
+}
+
 function updateMatchInfo() {
   const pitch = document.getElementById("matchPitch");
   const bench = document.getElementById("bench");
@@ -382,6 +427,7 @@ document.getElementById("resetAllBtn").onclick = () => {
   document.querySelectorAll(".subtab").forEach((b,i) => b.classList.toggle("active", i===0));
   renderExerciseList();
   loadExercise();
+  if (window.resetMatchStopwatch) window.resetMatchStopwatch();
 };
 
 setTabs();
