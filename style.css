@@ -683,3 +683,18 @@ body[data-theme="dark"] .swap-target {
     0 0 0 6px rgba(255, 228, 107, .24),
     0 6px 14px rgba(0,0,0,.35) !important;
 }
+
+
+/* Keep bench players compact while dragging */
+.bench-drag-preview {
+  width: 66px !important;
+  height: 66px !important;
+  border-radius: 50% !important;
+}
+
+@media (max-width: 640px) {
+  .bench-drag-preview {
+    width: 58px !important;
+    height: 58px !important;
+  }
+}
