@@ -1868,3 +1868,77 @@ button.secondary:hover {
 .splash-subtitle {
   display: none !important;
 }
+
+
+/* v1.1.0 - configurable match format and overtime */
+.settings-layout {
+  max-width: 620px;
+  margin: 0 auto;
+}
+.settings-card h3 { margin-top: 0; }
+.settings-field {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+}
+.settings-field > span {
+  font-size: 12px;
+  font-weight: 900;
+}
+.settings-field select,
+.settings-field input {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #111916;
+  color: var(--text);
+  font: inherit;
+}
+.settings-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+.settings-input-row > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+.settings-summary,
+.match-time-plan {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #121c17;
+}
+.settings-summary span,
+.match-time-plan span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.settings-summary strong,
+.match-time-plan strong {
+  font-size: 13px;
+}
+.settings-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.match-time-plan { margin: 10px 0 12px; }
+.overtime-display {
+  min-height: 20px;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+.overtime-display.active { color: #ffb45d; }
+.half-tabs { flex-wrap: wrap; }
