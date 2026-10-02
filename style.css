@@ -1996,3 +1996,102 @@ button.secondary:hover {
     animation: none !important;
   }
 }
+
+
+/* v1.1.2 - compact match header aligned to pitch panel */
+.match-main-column {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.match-main-column .match-scoreboard {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.match-scoreboard {
+  grid-template-columns: minmax(0, 1fr) minmax(112px, auto) minmax(0, 1fr);
+}
+
+.match-banner-center {
+  min-width: 112px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  padding: 8px 10px;
+  border-inline: 1px solid var(--line);
+}
+
+.match-banner-period {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  white-space: nowrap;
+}
+
+.match-banner-time {
+  font-size: 15px;
+  line-height: 1.15;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.match-banner-overtime {
+  min-height: 13px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.match-banner-overtime.active {
+  color: #ffb45d;
+}
+
+.splash-logo-image {
+  width: min(78vw, 520px) !important;
+  max-width: 520px !important;
+}
+
+@media (max-width: 640px) {
+  .match-scoreboard {
+    grid-template-columns: minmax(0, 1fr) 92px minmax(0, 1fr);
+    gap: 6px;
+    padding: 10px 8px;
+  }
+
+  .match-banner-center {
+    min-width: 92px;
+    padding: 6px 5px;
+  }
+
+  .match-banner-period {
+    font-size: 8px;
+  }
+
+  .match-banner-time {
+    font-size: 11px;
+  }
+
+  .match-banner-overtime {
+    font-size: 8px;
+  }
+
+  .score-team-name-input {
+    width: min(120px, 100%);
+  }
+
+  .score-actions {
+    gap: 5px;
+  }
+
+  .score-actions button {
+    padding-inline: 8px;
+  }
+}
