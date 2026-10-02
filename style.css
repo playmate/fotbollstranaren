@@ -2288,3 +2288,42 @@ button.secondary:hover {
     font-size: 12px;
   }
 }
+
+
+/* v1.3.2 - goalkeeper display and stable player hover */
+.playtime-keeper-time {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.playtime-keeper-time strong {
+  color: #e9d37c;
+  font-variant-numeric: tabular-nums;
+}
+
+.player-manager-row {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: auto;
+}
+
+.player-manager-row:hover {
+  background: #202d26;
+}
+
+.player-manager-row button:hover {
+  filter: none;
+}
+
+.player-manager-avatar,
+.player-manager-copy,
+.player-manager-stats,
+.player-manager-name-row {
+  pointer-events: none;
+}
+
+.player-manager-row .remove-player-btn {
+  pointer-events: auto;
+}
