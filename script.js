@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.33";
+const APP_VERSION = "v1.6.34";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -779,17 +779,7 @@ function getPlayerSnapshot(name) {
 function renderPlaytimeRoster() {
   const root = document.getElementById("playtimeRoster");
   const halfColumn = document.getElementById("lineupHalfColumn");
-  const hint = document.getElementById("playtimeSwapHint");
-  const clearBtn = document.getElementById("clearPlaytimeSelection");
-
   if (halfColumn) halfColumn.textContent = `H${currentHalf + 1}`;
-  if (clearBtn) clearBtn.disabled = !selectedPlaytimePlayer;
-
-  if (hint) {
-    hint.textContent = selectedPlaytimePlayer
-      ? `${selectedPlaytimePlayer} markerad – välj en annan spelare för att byta.`
-      : "Välj en spelare att byta.";
-  }
 
   if (!root) return;
 
@@ -2659,7 +2649,6 @@ function initStopwatch() {
     };
   }
 
-  document.getElementById("clearPlaytimeSelection").onclick = clearPlaytimePlayerSelection;
   setStopwatchControlState(Boolean(stopwatchStartedAt));
   updateHalfUI();
   updateStopwatchDisplay();
