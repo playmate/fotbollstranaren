@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=0.3.6" />
+  <link rel="stylesheet" href="style.css?v=0.3.8" />
 </head>
 <body>
   <header class="topbar">
@@ -17,7 +17,7 @@
     </div>
     <div id="versionTracker" class="version-tracker" title="Versionsstatus">
       <span class="version-dot"></span>
-      <span id="versionText">Version v0.3.7</span>
+      <span id="versionText">Version v0.3.8</span>
     </div>
   </header>
 
@@ -54,41 +54,6 @@
 
         <aside class="side-panel">
           <div class="panel">
-            <h3>Bänk</h3>
-            <div id="bench" class="bench dropzone"></div>
-            <div class="hint">Dra en spelare till planen eller tillbaka hit.</div>
-          </div>
-
-          <div class="panel">
-            <h3>Verktyg</h3>
-            <div class="tool-grid">
-              <button id="addOpponent">+ Motståndare</button>
-              <button id="addBall">+ Boll</button>
-              <button id="addCone">+ Kona</button>
-              <button id="addCoach">+ Tränare</button>
-            </div>
-          </div>
-
-          <div class="panel">
-            <h3>Snabbinfo</h3>
-            <div id="matchInfo" class="stat-list"></div>
-          </div>
-
-          <div class="panel">
-            <h3>Spelare</h3>
-            <div class="roster-columns">
-              <div>
-                <div class="roster-heading">På planen</div>
-                <div id="activePlayersList" class="roster-list"></div>
-              </div>
-              <div>
-                <div class="roster-heading">Bänk</div>
-                <div id="benchPlayersList" class="roster-list"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel">
             <h3>Speltid</h3>
             <div id="stopwatchDisplay" class="stopwatch-display">00:00</div>
             <div class="stopwatch-actions">
@@ -96,6 +61,47 @@
               <button id="stopwatchReset" class="secondary">Nollställ</button>
             </div>
           </div>
+
+          <div class="panel">
+            <h3>Bänk</h3>
+            <div id="bench" class="bench dropzone"></div>
+            <div class="hint">Dra en spelare till planen eller tillbaka hit.</div>
+          </div>
+
+          <details class="panel collapsible-panel">
+            <summary>Verktyg</summary>
+            <div class="collapsible-content">
+              <div class="tool-grid">
+                <button id="addOpponent">+ Motståndare</button>
+                <button id="addBall">+ Boll</button>
+                <button id="addCone">+ Kona</button>
+                <button id="addCoach">+ Tränare</button>
+              </div>
+            </div>
+          </details>
+
+          <details class="panel collapsible-panel">
+            <summary>Snabbinfo</summary>
+            <div class="collapsible-content">
+              <div id="matchInfo" class="stat-list"></div>
+            </div>
+          </details>
+
+          <details class="panel collapsible-panel">
+            <summary>Spelare</summary>
+            <div class="collapsible-content">
+              <div class="roster-columns">
+                <div>
+                  <div class="roster-heading">På planen</div>
+                  <div id="activePlayersList" class="roster-list"></div>
+                </div>
+                <div>
+                  <div class="roster-heading">Bänk</div>
+                  <div id="benchPlayersList" class="roster-list"></div>
+                </div>
+              </div>
+            </div>
+          </details>
         </aside>
       </div>
     </section>
@@ -155,6 +161,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=0.3.7"></script>
+  <script src="script.js?v=0.3.8"></script>
 </body>
 </html>
