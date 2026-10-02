@@ -487,6 +487,7 @@ function makeDraggable(el) {
     const originLeft = el.style.left;
     const originTop = el.style.top;
     const tokenRect = el.getBoundingClientRect();
+    const dragSubstitutionSnapshot = captureSubstitutionState();
     let benchDragPlaceholder = null;
 
     if (fromBench) {
@@ -592,6 +593,8 @@ function makeDraggable(el) {
           el.classList.remove("bench-player");
           el.style.left = targetLeft;
           el.style.top = targetTop;
+          lastSubstitutionState = dragSubstitutionSnapshot;
+          updateUndoSubstitutionButton();
           removeBenchDragPlaceholder();
           clearSwapTarget();
           updateMatchInfo();
@@ -648,7 +651,7 @@ function makeDraggable(el) {
           benchTarget.classList.remove("bench-player");
           benchTarget.style.left = originLeft;
           benchTarget.style.top = originTop;
-          el.remove(); addPlayerToBench(keeperName); clearSwapTarget(); updateMatchInfo(); return;
+          el.remove(); addPlayerToBench(keeperName); lastSubstitutionState = dragSubstitutionSnapshot; updateUndoSubstitutionButton(); clearSwapTarget(); updateMatchInfo(); return;
         }
       }
 
@@ -675,6 +678,8 @@ function makeDraggable(el) {
 
           el.remove();
           addPlayerToBench(outgoingName);
+          lastSubstitutionState = dragSubstitutionSnapshot;
+          updateUndoSubstitutionButton();
 
           clearSwapTarget();
           updateMatchInfo();
@@ -685,7 +690,7 @@ function makeDraggable(el) {
       if (canGoToBench && pointInside(bench.getBoundingClientRect(), ev.clientX, ev.clientY)) {
         const name = el.dataset.name;
         resetSubstitutionClock(name);
-        el.remove(); addPlayerToBench(name); clearSwapTarget(); updateMatchInfo(); return;
+        el.remove(); addPlayerToBench(name); lastSubstitutionState = dragSubstitutionSnapshot; updateUndoSubstitutionButton(); clearSwapTarget(); updateMatchInfo(); return;
       }
 
       if (pointInside(originParent.getBoundingClientRect(), ev.clientX, ev.clientY)) placeFromPointer(originParent, el, ev.clientX, ev.clientY);
