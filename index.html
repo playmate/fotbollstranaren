@@ -4,17 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=1.1.1" />
+  <link rel="stylesheet" href="style.css?v=1.1.2" />
 </head>
 <body data-theme="dark">
   <div id="appSplash" class="app-splash" aria-hidden="true">
     <div class="splash-logo">
-      <img class="splash-logo-image" src="assets/vaksala-sk-logo.png" alt="Vaksala SK Uppsala" />
+      <img class="splash-logo-image" src="assets/vaksala-sk-logo-large.png?v=1.1.2" alt="Vaksala SK Uppsala" />
     </div>
   </div>
   <div id="versionTracker" class="version-tracker" title="Versionsstatus">
     <span class="version-dot"></span>
-    <span id="versionText">Version v1.1.1</span>
+    <span id="versionText">Version v1.1.2</span>
   </div>
 
   <nav class="tabs">
@@ -37,37 +37,43 @@
         </div>
       </div>
 
-      <div class="panel match-scoreboard">
-        <div class="score-team">
-          <span class="score-team-label">Vaksala SK</span>
-          <div class="score-value" id="homeScore">0</div>
-          <div class="score-actions">
-            <button id="homeGoalMinus" class="secondary score-minus" type="button" aria-label="Ta bort mål för eget lag">−</button>
-            <button id="homeGoalPlus" type="button">+ Mål</button>
-          </div>
-        </div>
-
-        <div class="score-divider">–</div>
-
-        <div class="score-team">
-          <input id="opponentName" class="score-team-name-input" type="text" maxlength="28" placeholder="Motståndare" aria-label="Motståndarlag" />
-          <div class="score-value" id="awayScore">0</div>
-          <div class="score-actions">
-            <button id="awayGoalMinus" class="secondary score-minus" type="button" aria-label="Ta bort mål för motståndarna">−</button>
-            <button id="awayGoalPlus" type="button">+ Mål</button>
-          </div>
-        </div>
-      </div>
-
       <div class="match-layout">
-        <div class="pitch-card">
-          <div id="matchPitch" class="pitch match-pitch">
-            <div class="half-line"></div>
-            <div class="center-circle"></div>
-            <div class="goal-area top"></div>
-            <div class="goal-area bottom"></div>
-            <div class="goal top-goal">MÅL</div>
-            <div class="goal bottom-goal">MÅL</div>
+        <div class="match-main-column">
+          <div class="panel match-scoreboard">
+            <div class="score-team">
+              <span class="score-team-label">Vaksala SK</span>
+              <div class="score-value" id="homeScore">0</div>
+              <div class="score-actions">
+                <button id="homeGoalMinus" class="secondary score-minus" type="button" aria-label="Ta bort mål för eget lag">−</button>
+                <button id="homeGoalPlus" type="button">+ Mål</button>
+              </div>
+            </div>
+
+            <div class="match-banner-center">
+              <span id="matchBannerPeriod" class="match-banner-period">Halvlek 1/2</span>
+              <strong id="matchBannerTime" class="match-banner-time">00:00 / 30:00</strong>
+              <span id="matchBannerOvertime" class="match-banner-overtime"></span>
+            </div>
+
+            <div class="score-team">
+              <input id="opponentName" class="score-team-name-input" type="text" maxlength="28" placeholder="Motståndare" aria-label="Motståndarlag" />
+              <div class="score-value" id="awayScore">0</div>
+              <div class="score-actions">
+                <button id="awayGoalMinus" class="secondary score-minus" type="button" aria-label="Ta bort mål för motståndarna">−</button>
+                <button id="awayGoalPlus" type="button">+ Mål</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="pitch-card">
+            <div id="matchPitch" class="pitch match-pitch">
+              <div class="half-line"></div>
+              <div class="center-circle"></div>
+              <div class="goal-area top"></div>
+              <div class="goal-area bottom"></div>
+              <div class="goal top-goal">MÅL</div>
+              <div class="goal bottom-goal">MÅL</div>
+            </div>
           </div>
         </div>
 
@@ -273,6 +279,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=1.1.1"></script>
+  <script src="script.js?v=1.1.2"></script>
 </body>
 </html>
