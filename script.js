@@ -727,14 +727,16 @@ function renderMatchBench() {
 
   if (count) count.textContent = `${benchPlayers.length} på bänken`;
 
-  benchPlayers.forEach(el => {
+  benchPlayers.forEach((el, index) => {
     const benchSeconds = getLiveBenchStintSeconds(el.dataset.name);
     const totalSeconds = getLivePlayerTotalSeconds(el.dataset.name);
+    const nextIn = index === 0 ? '<span class="next-in-badge">Nästa in</span>' : "";
 
     el.innerHTML = `
       <div class="match-bench-player-info">
         <strong>${el.dataset.name}</strong>
         <span class="lineup-status on-bench">På bänken</span>
+        ${nextIn}
       </div>
       <span class="match-bench-live-time" data-bench-time-for="${el.dataset.name}">Bänktid ${fmtTime(benchSeconds)}</span>
       <span class="match-bench-total-time">Totalt ${fmtTime(totalSeconds)}</span>
@@ -951,12 +953,23 @@ function renderSubstitutionSuggestion() {
       <strong>${incoming.name} in · ${outgoing.name} ut</strong>
       <small class="substitution-reason">På plan: ${fmtTime(outgoing.stint)} · På bänk: ${fmtTime(incoming.benchStint)}${reason}</small>
     </div>
-    <button type="button" class="secondary compact-btn" id="selectSuggestionBtn">Markera</button>
+    <div class="substitution-suggestion-actions">
+      <button type="button" class="secondary compact-btn" id="selectSuggestionBtn">Markera</button>
+      <button type="button" class="compact-btn" id="performSuggestionBtn">Genomför byte</button>
+    </div>
   `;
 
   document.getElementById("selectSuggestionBtn").onclick = () => {
     selectedPlaytimePlayer = outgoing.name;
     renderPlaytimeRoster();
+  };
+
+  document.getElementById("performSuggestionBtn").onclick = () => {
+    if (stopwatchStartedAt) onStopwatchTick();
+    const swapped = swapPlayersByClick(outgoing.name, incoming.name);
+    selectedPlaytimePlayer = null;
+    currentSubstitutionSuggestion = null;
+    if (swapped) updateMatchInfo();
   };
 }
 
