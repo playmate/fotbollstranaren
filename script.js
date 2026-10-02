@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.0.1";
+const APP_VERSION = "v1.0.2";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 let PLAYERS = JSON.parse(localStorage.getItem("fotbollstranaren-players") || "null") || [...DEFAULT_PLAYERS];
@@ -1636,6 +1636,19 @@ function wireTrainingTools() {
   document.getElementById("exAddCoach").onclick = () => placeToken(pitch, createToken("coach", {name:"Tränare"}), 50, 50);
 }
 
+function initSplash() {
+  const splash = document.getElementById("appSplash");
+  if (!splash) return;
+
+  const removeSplash = () => {
+    splash.classList.add("is-finished");
+    setTimeout(() => splash.remove(), 350);
+  };
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  setTimeout(removeSplash, prefersReducedMotion ? 250 : 1900);
+}
+
 function initTheme() {
   document.body.dataset.theme = "dark";
 }
@@ -1774,6 +1787,7 @@ function initVersionTracker() {
   if (text) text.textContent = `Version ${APP_VERSION}`;
 }
 
+initSplash();
 initTheme();
 setTabs();
 setTrainingCategory();
