@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.3.10";
+const APP_VERSION = "v0.3.11";
 
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
@@ -272,8 +272,14 @@ function makeDraggable(el) {
     const bench = document.getElementById("bench");
 
     el.classList.add("dragging", "dragging-floating");
-    el.style.width = `${tokenRect.width}px`;
-    el.style.height = `${tokenRect.height}px`;
+    if (fromBench) {
+      el.classList.add("bench-drag-preview");
+      el.style.width = "";
+      el.style.height = "";
+    } else {
+      el.style.width = `${tokenRect.width}px`;
+      el.style.height = `${tokenRect.height}px`;
+    }
     el.style.left = `${e.clientX}px`;
     el.style.top = `${e.clientY}px`;
     document.body.appendChild(el);
@@ -305,7 +311,7 @@ function makeDraggable(el) {
 
     const restoreToOrigin = () => {
       clearSwapTarget();
-      el.classList.remove("dragging", "dragging-floating");
+      el.classList.remove("dragging", "dragging-floating", "bench-drag-preview");
       el.style.width = "";
       el.style.height = "";
 
@@ -326,7 +332,7 @@ function makeDraggable(el) {
       document.removeEventListener("pointerup", finish);
       document.removeEventListener("pointercancel", cancel);
 
-      el.classList.remove("dragging", "dragging-floating");
+      el.classList.remove("dragging", "dragging-floating", "bench-drag-preview");
       el.style.width = "";
       el.style.height = "";
 
