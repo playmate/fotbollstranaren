@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=0.9.2" />
+  <link rel="stylesheet" href="style.css?v=1.0.0" />
 </head>
 <body data-theme="dark">
   <div id="versionTracker" class="version-tracker" title="Versionsstatus">
     <span class="version-dot"></span>
-    <span id="versionText">Version v0.9.2</span>
+    <span id="versionText">Version v1.0.0</span>
   </div>
 
   <nav class="tabs">
@@ -24,7 +24,8 @@
     <section id="match" class="page active">
       <div class="page-title-row">
         <div class="actions">
-          <button id="resetMatchBtn">Återställ plan</button>
+          <button id="newMatchBtn">Ny match</button>
+          <button id="resetMatchBtn" class="secondary">Återställ plan</button>
           <button id="clearOppBtn" class="secondary">Rensa motståndare</button>
           <button id="resetAllBtn" class="secondary">Återställ allt</button>
         </div>
@@ -32,7 +33,7 @@
 
       <div class="panel match-scoreboard">
         <div class="score-team">
-          <span class="score-team-label">Eget lag</span>
+          <span class="score-team-label">Vaksala SK</span>
           <div class="score-value" id="homeScore">0</div>
           <div class="score-actions">
             <button id="homeGoalMinus" class="secondary score-minus" type="button" aria-label="Ta bort mål för eget lag">−</button>
@@ -43,7 +44,7 @@
         <div class="score-divider">–</div>
 
         <div class="score-team">
-          <span class="score-team-label">Motståndare</span>
+          <input id="opponentName" class="score-team-name-input" type="text" maxlength="28" placeholder="Motståndare" aria-label="Motståndarlag" />
           <div class="score-value" id="awayScore">0</div>
           <div class="score-actions">
             <button id="awayGoalMinus" class="secondary score-minus" type="button" aria-label="Ta bort mål för motståndarna">−</button>
@@ -120,6 +121,7 @@
             <span>Totalt</span>
           </div>
 
+          <div id="substitutionSuggestion" class="substitution-suggestion"></div>
           <div id="playtimeRoster" class="playtime-click-roster"></div>
         </div>
       </div>
@@ -181,6 +183,8 @@
         <button id="clearHistoryBtn" class="danger-btn" type="button">Rensa historik</button>
       </div>
 
+      <div id="historyPlayerTotals" class="panel history-player-totals"></div>
+
       <div id="historyEmpty" class="panel history-empty">
         Inga sparade matcher ännu.
       </div>
@@ -216,10 +220,38 @@
           <div id="playerManagerList" class="player-manager-list"></div>
         </div>
       </div>
+
+      <div class="panel data-tools-panel">
+        <div>
+          <h3>Backup</h3>
+          <p>Exportera spelare, övningar, historik och pågående match.</p>
+        </div>
+        <div class="data-tools-actions">
+          <button id="exportDataBtn" type="button">Exportera data</button>
+          <button id="importDataBtn" class="secondary" type="button">Importera data</button>
+          <input id="importDataFile" type="file" accept="application/json,.json" hidden />
+        </div>
+      </div>
     </section>
 
   </main>
 
-  <script src="script.js?v=0.9.2"></script>
+  <div id="goalScorerModal" class="app-modal" hidden>
+    <div class="app-modal-backdrop" data-close-goal-modal></div>
+    <div class="app-modal-card" role="dialog" aria-modal="true" aria-labelledby="goalScorerTitle">
+      <div class="app-modal-head">
+        <div>
+          <h3 id="goalScorerTitle">Vem gjorde målet?</h3>
+          <p>Spelare på plan visas först.</p>
+        </div>
+        <button id="closeGoalScorerModal" class="secondary modal-close-btn" type="button">×</button>
+      </div>
+      <div id="goalScorerActive" class="goal-scorer-section"></div>
+      <div id="goalScorerBench" class="goal-scorer-section"></div>
+      <button id="goalWithoutScorer" class="secondary goal-without-scorer" type="button">Registrera utan målskytt</button>
+    </div>
+  </div>
+
+  <script src="script.js?v=1.0.0"></script>
 </body>
 </html>
