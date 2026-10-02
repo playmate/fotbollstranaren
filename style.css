@@ -2364,3 +2364,20 @@ button.secondary:hover {
 .history-sort-btn.active span {
   color: #66c990;
 }
+
+
+/* v1.4.2 - backup under settings and two-line match length */
+.settings-backup-panel {
+  margin-top: 16px;
+}
+
+.match-banner-length {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  line-height: 1.25;
+}
+
+.match-banner-length span:last-child {
+  opacity: .82;
+}
