@@ -667,3 +667,19 @@ button:disabled {
 body[data-theme="dark"] .collapsible-panel summary {
   color: var(--text);
 }
+
+
+.swap-target {
+  outline: 4px solid #ffd54a !important;
+  box-shadow:
+    0 0 0 6px rgba(255, 213, 74, .22),
+    0 6px 14px rgba(0,0,0,.2) !important;
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+body[data-theme="dark"] .swap-target {
+  outline-color: #ffe46b !important;
+  box-shadow:
+    0 0 0 6px rgba(255, 228, 107, .24),
+    0 6px 14px rgba(0,0,0,.35) !important;
+}
