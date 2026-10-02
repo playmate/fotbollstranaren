@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.3.1";
+const APP_VERSION = "v0.3.2";
 
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
@@ -208,40 +208,95 @@ function placeToken(container, el, x, y) {
   el.style.top = `${y}%`;
 }
 
+function pointInside(rect, x, y) {
+  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+}
+
+function placeFromPointer(container, el, clientX, clientY) {
+  const rect = container.getBoundingClientRect();
+  let x = ((clientX - rect.left) / rect.width) * 100;
+  let y = ((clientY - rect.top) / rect.height) * 100;
+  x = Math.max(3, Math.min(97, x));
+  y = Math.max(3, Math.min(97, y));
+  placeToken(container, el, x, y);
+}
+
 function makeDraggable(el) {
   el.addEventListener("pointerdown", e => {
     if (el.parentElement?.id === "bench") return;
-    el.setPointerCapture(e.pointerId);
-    el.classList.add("dragging");
+
+    e.preventDefault();
+
+    const originParent = el.parentElement;
+    if (!originParent || !originParent.classList.contains("pitch")) return;
+
+    const originLeft = el.style.left;
+    const originTop = el.style.top;
+    const tokenRect = el.getBoundingClientRect();
+
+    el.classList.add("dragging", "dragging-floating");
+    el.style.width = `${tokenRect.width}px`;
+    el.style.height = `${tokenRect.height}px`;
+    el.style.left = `${e.clientX}px`;
+    el.style.top = `${e.clientY}px`;
+    document.body.appendChild(el);
 
     const move = ev => {
-      const container = el.parentElement;
-      if (!container || !container.classList.contains("pitch")) return;
-      const rect = container.getBoundingClientRect();
-      let x = ((ev.clientX - rect.left) / rect.width) * 100;
-      let y = ((ev.clientY - rect.top) / rect.height) * 100;
-      x = Math.max(3, Math.min(97, x));
-      y = Math.max(3, Math.min(97, y));
-      el.style.left = `${x}%`;
-      el.style.top = `${y}%`;
+      el.style.left = `${ev.clientX}px`;
+      el.style.top = `${ev.clientY}px`;
     };
 
-    const up = ev => {
-      el.releasePointerCapture?.(e.pointerId);
-      el.classList.remove("dragging");
-      el.removeEventListener("pointermove", move);
-      el.removeEventListener("pointerup", up);
-      el.removeEventListener("pointercancel", up);
+    const finish = ev => {
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", finish);
+      document.removeEventListener("pointercancel", cancel);
 
-      if (el.dataset.type === "player" && !el.classList.contains("opponent")) {
-        maybeMoveToBench(ev, el);
+      el.classList.remove("dragging", "dragging-floating");
+      el.style.width = "";
+      el.style.height = "";
+
+      const matchPitch = document.getElementById("matchPitch");
+      const bench = document.getElementById("bench");
+      const canGoToBench =
+        originParent.id === "matchPitch" &&
+        el.dataset.type === "player" &&
+        !el.classList.contains("opponent") &&
+        !el.classList.contains("coach");
+
+      if (canGoToBench && pointInside(bench.getBoundingClientRect(), ev.clientX, ev.clientY)) {
+        const name = el.dataset.name;
+        el.remove();
+        addPlayerToBench(name);
+        updateMatchInfo();
+        return;
       }
+
+      if (pointInside(originParent.getBoundingClientRect(), ev.clientX, ev.clientY)) {
+        placeFromPointer(originParent, el, ev.clientX, ev.clientY);
+      } else {
+        originParent.appendChild(el);
+        el.style.left = originLeft;
+        el.style.top = originTop;
+      }
+
       updateMatchInfo();
     };
 
-    el.addEventListener("pointermove", move);
-    el.addEventListener("pointerup", up);
-    el.addEventListener("pointercancel", up);
+    const cancel = () => {
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", finish);
+      document.removeEventListener("pointercancel", cancel);
+      el.classList.remove("dragging", "dragging-floating");
+      el.style.width = "";
+      el.style.height = "";
+      originParent.appendChild(el);
+      el.style.left = originLeft;
+      el.style.top = originTop;
+    };
+
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", finish);
+    document.addEventListener("pointercancel", cancel);
   });
 }
 
@@ -453,8 +508,7 @@ function initVersionTracker() {
   const text = document.getElementById("versionText");
   if (!tracker || !text) return;
 
-  const deployedAt = "2026-10-02";
-  text.textContent = `Version ${APP_VERSION} • ${deployedAt}`;
+  text.textContent = `Version ${APP_VERSION}`;
   tracker.classList.add("is-current");
 }
 
