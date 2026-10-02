@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=0.8.2" />
+  <link rel="stylesheet" href="style.css?v=0.9.0" />
 </head>
 <body data-theme="dark">
   <div id="versionTracker" class="version-tracker" title="Versionsstatus">
     <span class="version-dot"></span>
-    <span id="versionText">Version v0.8.2</span>
+    <span id="versionText">Version v0.9.0</span>
   </div>
 
   <nav class="tabs">
@@ -17,6 +17,7 @@
     <button class="tab" data-tab="playtime">Speltid</button>
     <button class="tab" data-tab="training">Träning</button>
     <button class="tab" data-tab="players">Spelare</button>
+    <button class="tab" data-tab="history">Historik</button>
   </nav>
 
   <main>
@@ -82,6 +83,8 @@
               <button id="stopwatchReset" class="secondary">Nollställ</button>
             </div>
           </div>
+
+          <button id="saveMatchBtn" class="save-match-btn" type="button">Spara match</button>
         </div>
 
         <div class="panel playtime-swap-panel">
@@ -151,6 +154,22 @@
       </div>
     </section>
 
+    <section id="history" class="page">
+      <div class="page-title-row history-title-row">
+        <div>
+          <h2>Historik</h2>
+          <p>Sparade matcher och spelstatistik.</p>
+        </div>
+        <button id="clearHistoryBtn" class="danger-btn" type="button">Rensa historik</button>
+      </div>
+
+      <div id="historyEmpty" class="panel history-empty">
+        Inga sparade matcher ännu.
+      </div>
+
+      <div id="historyList" class="history-list"></div>
+    </section>
+
     <section id="players" class="page">
       <div class="page-title-row">
         <div>
@@ -183,6 +202,6 @@
 
   </main>
 
-  <script src="script.js?v=0.8.2"></script>
+  <script src="script.js?v=0.9.0"></script>
 </body>
 </html>
