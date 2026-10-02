@@ -2584,3 +2584,47 @@ button.secondary:hover {
     flex: 1;
   }
 }
+
+
+/* v1.6.2 - clearer separation between half and total times */
+.playtime-columns,
+.playtime-player-row {
+  grid-template-columns: minmax(0, 1fr) 76px 76px;
+  column-gap: 0;
+}
+
+.playtime-columns span:nth-child(2),
+.playtime-player-row > .lineup-time:nth-child(2) {
+  border-left: 1px solid var(--line);
+}
+
+.playtime-columns span:nth-child(3),
+.playtime-player-row > .lineup-time:nth-child(3) {
+  border-left: 1px solid var(--line);
+}
+
+.playtime-columns span:nth-child(2),
+.playtime-columns span:nth-child(3) {
+  padding-left: 12px;
+}
+
+.playtime-player-row > .lineup-time {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-left: 12px;
+}
+
+@media (max-width: 640px) {
+  .playtime-columns,
+  .playtime-player-row {
+    grid-template-columns: minmax(0, 1fr) 62px 62px;
+  }
+
+  .playtime-columns span:nth-child(2),
+  .playtime-columns span:nth-child(3),
+  .playtime-player-row > .lineup-time {
+    padding-left: 8px;
+  }
+}
