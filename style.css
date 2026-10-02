@@ -2994,3 +2994,24 @@ button.secondary:hover {
     font-size: 9px;
   }
 }
+
+
+/* v1.6.14 - clearer player names, smaller role/number */
+#matchPitch .player-token:not(.opponent):not(.coach) .match-indicator {
+  font-size: 22px;
+}
+
+#matchPitch .player-token:not(.opponent):not(.coach) .match-player-name {
+  font-size: 13px;
+  padding: 3px 7px;
+}
+
+@media (max-width: 640px) {
+  #matchPitch .player-token:not(.opponent):not(.coach) .match-indicator {
+    font-size: 20px;
+  }
+
+  #matchPitch .player-token:not(.opponent):not(.coach) .match-player-name {
+    font-size: 12px;
+  }
+}
