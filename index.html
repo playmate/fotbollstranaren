@@ -4,20 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=0.6.0" />
+  <link rel="stylesheet" href="style.css?v=0.6.1" />
 </head>
-<body>
+<body data-theme="dark">
   <header class="topbar">
     <div>
       <h1>⚽ Fotbollstränaren</h1>
     </div>
     <div class="topbar-actions">
-      <button id="themeToggle" class="ghost-btn">🌙 Mörkt läge</button>
       <button id="resetAllBtn" class="ghost-btn">Återställ</button>
     </div>
     <div id="versionTracker" class="version-tracker" title="Versionsstatus">
       <span class="version-dot"></span>
-      <span id="versionText">Version v0.6.0</span>
+      <span id="versionText">Version v0.6.1</span>
     </div>
   </header>
 
@@ -88,18 +87,6 @@
             <div id="bench" class="bench lineup-list lineup-bench dropzone"></div>
             <div class="hint">Dra mellan planen och listan, eller släpp på en spelare för direkt byte.</div>
           </div>
-
-          <details class="panel collapsible-panel">
-            <summary>Verktyg</summary>
-            <div class="collapsible-content">
-              <div class="tool-grid">
-                <button id="addOpponent">+ Motståndare</button>
-                <button id="addBall">+ Boll</button>
-                <button id="addCone">+ Kona</button>
-                <button id="addCoach">+ Tränare</button>
-              </div>
-            </div>
-          </details>
 
         </aside>
       </div>
@@ -208,6 +195,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=0.6.0"></script>
+  <script src="script.js?v=0.6.1"></script>
 </body>
 </html>
