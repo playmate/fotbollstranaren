@@ -3216,3 +3216,7 @@ button.secondary:hover {
     font-size: 10px;
   }
 }
+
+
+/* v1.6.30 - simple match coaching helpers */
+.substitution-suggestion-actions{display:flex;gap:8px;flex-wrap:wrap}.next-in-badge{display:inline-flex;width:fit-content;margin-top:4px;padding:2px 6px;border-radius:999px;background:rgba(255,173,61,.14);border:1px solid rgba(255,173,61,.35);color:#ffb45a;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.match-period-switcher-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}#matchStartPeriodBtn[hidden]{display:none!important}@media(max-width:640px){.match-period-switcher-controls{width:100%;align-items:stretch;flex-direction:column}#matchStartPeriodBtn{width:100%}.substitution-suggestion-actions{width:100%}.substitution-suggestion-actions button{flex:1}}
