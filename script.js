@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.19";
+const APP_VERSION = "v1.6.20";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -2186,26 +2186,25 @@ function updateStopwatchDisplay() {
 
   if (display) display.textContent = fmtDetailedTime(Math.min(elapsed, target));
 
-  const totalElapsed = getTotalElapsedMs();
-  const totalTarget = getMatchTargetMs();
+  // The visible match clock follows the current half/period, not total match time.
+  // It freezes at the configured half length and shows any extra time separately.
   ["matchBannerTime", "playtimeBannerTime"].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.textContent = fmtDetailedTime(Math.min(totalElapsed, totalTarget));
+    if (el) el.textContent = fmtDetailedTime(Math.min(elapsed, target));
   });
 
-  const totalOvertime = Math.max(0, totalElapsed - totalTarget);
+  const periodOvertime = Math.max(0, elapsed - target);
   ["matchBannerOvertime", "playtimeBannerOvertime"].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
-      el.textContent = totalOvertime > 0 ? `Övertid +${fmtDetailedTime(totalOvertime)}` : "";
-      el.classList.toggle("active", totalOvertime > 0);
+      el.textContent = periodOvertime > 0 ? `+${fmtDetailedTime(periodOvertime)}` : "";
+      el.classList.toggle("active", periodOvertime > 0);
     }
   });
 
   if (overtime) {
-    const over = Math.max(0, elapsed - target);
-    overtime.textContent = over > 0 ? `Övertid +${fmtDetailedTime(over)}` : "";
-    overtime.classList.toggle("active", over > 0);
+    overtime.textContent = periodOvertime > 0 ? `+${fmtDetailedTime(periodOvertime)}` : "";
+    overtime.classList.toggle("active", periodOvertime > 0);
   }
 }
 
