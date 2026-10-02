@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=0.9.0" />
+  <link rel="stylesheet" href="style.css?v=0.9.1" />
 </head>
 <body data-theme="dark">
   <div id="versionTracker" class="version-tracker" title="Versionsstatus">
     <span class="version-dot"></span>
-    <span id="versionText">Version v0.9.0</span>
+    <span id="versionText">Version v0.9.1</span>
   </div>
 
   <nav class="tabs">
@@ -31,6 +31,28 @@
           <button id="resetMatchBtn">Återställ plan</button>
           <button id="clearOppBtn" class="secondary">Rensa motståndare</button>
           <button id="resetAllBtn" class="secondary">Återställ allt</button>
+        </div>
+      </div>
+
+      <div class="panel match-scoreboard">
+        <div class="score-team">
+          <span class="score-team-label">Eget lag</span>
+          <div class="score-value" id="homeScore">0</div>
+          <div class="score-actions">
+            <button id="homeGoalMinus" class="secondary score-minus" type="button" aria-label="Ta bort mål för eget lag">−</button>
+            <button id="homeGoalPlus" type="button">+ Mål</button>
+          </div>
+        </div>
+
+        <div class="score-divider">–</div>
+
+        <div class="score-team">
+          <span class="score-team-label">Motståndare</span>
+          <div class="score-value" id="awayScore">0</div>
+          <div class="score-actions">
+            <button id="awayGoalMinus" class="secondary score-minus" type="button" aria-label="Ta bort mål för motståndarna">−</button>
+            <button id="awayGoalPlus" type="button">+ Mål</button>
+          </div>
         </div>
       </div>
 
@@ -202,6 +224,6 @@
 
   </main>
 
-  <script src="script.js?v=0.9.0"></script>
+  <script src="script.js?v=0.9.1"></script>
 </body>
 </html>
