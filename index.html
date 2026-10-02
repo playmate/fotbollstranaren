@@ -4,17 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=1.1.2" />
+  <link rel="stylesheet" href="style.css?v=1.2.0" />
 </head>
 <body data-theme="dark">
   <div id="appSplash" class="app-splash" aria-hidden="true">
     <div class="splash-logo">
-      <img class="splash-logo-image" src="assets/vaksala-sk-logo-large.png?v=1.1.2" alt="Vaksala SK Uppsala" />
+      <img class="splash-logo-image" src="assets/vaksala-sk-logo-large.png?v=1.2.0" alt="Vaksala SK Uppsala" />
     </div>
   </div>
   <div id="versionTracker" class="version-tracker" title="Versionsstatus">
     <span class="version-dot"></span>
-    <span id="versionText">Version v1.1.2</span>
+    <span id="versionText">Version v1.2.0</span>
   </div>
 
   <nav class="tabs">
@@ -28,6 +28,11 @@
 
   <main>
     <section id="match" class="page active">
+      <div id="matchEmptyState" class="match-empty-state">
+        <button id="startFirstMatchBtn" class="new-match-hero-btn" type="button">Ny match</button>
+      </div>
+
+      <div id="matchActiveContent" hidden>
       <div class="page-title-row">
         <div class="actions">
           <button id="newMatchBtn">Ny match</button>
@@ -56,7 +61,8 @@
             </div>
 
             <div class="score-team">
-              <input id="opponentName" class="score-team-name-input" type="text" maxlength="28" placeholder="Motståndare" aria-label="Motståndarlag" />
+              <span id="opponentNameLabel" class="score-team-label opponent-team-label">Motståndare</span>
+              <input id="opponentName" type="hidden" value="" />
               <div class="score-value" id="awayScore">0</div>
               <div class="score-actions">
                 <button id="awayGoalMinus" class="secondary score-minus" type="button" aria-label="Ta bort mål för motståndarna">−</button>
@@ -87,6 +93,7 @@
             <div class="hint">Dra en spelare till planen, eller släpp på en spelare för direkt byte.</div>
           </div>
         </aside>
+      </div>
       </div>
     </section>
 
@@ -279,6 +286,40 @@
     </div>
   </div>
 
-  <script src="script.js?v=1.1.2"></script>
+  <div id="newMatchOpponentModal" class="app-modal" hidden>
+    <div class="app-modal-backdrop" data-close-new-match-opponent></div>
+    <div class="app-modal-card compact-match-modal" role="dialog" aria-modal="true" aria-labelledby="newMatchOpponentTitle">
+      <div class="app-modal-head">
+        <div>
+          <h3 id="newMatchOpponentTitle">Ny match</h3>
+          <p>Skriv in motståndarlagets namn.</p>
+        </div>
+        <button id="closeNewMatchOpponentModal" class="secondary modal-close-btn" type="button">×</button>
+      </div>
+      <form id="newMatchOpponentForm" class="new-match-opponent-form">
+        <input id="newMatchOpponentInput" type="text" maxlength="28" placeholder="Motståndarlag" autocomplete="off" required />
+        <button type="submit">Starta match</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="ongoingMatchModal" class="app-modal" hidden>
+    <div class="app-modal-backdrop" data-close-ongoing-match></div>
+    <div class="app-modal-card compact-match-modal" role="dialog" aria-modal="true" aria-labelledby="ongoingMatchTitle">
+      <div class="app-modal-head">
+        <div>
+          <h3 id="ongoingMatchTitle">En match pågår</h3>
+          <p>Vad vill du göra med statistiken innan du startar en ny match?</p>
+        </div>
+      </div>
+      <div class="ongoing-match-actions">
+        <button id="saveAndNewMatchBtn" type="button">Spara statistiken</button>
+        <button id="discardAndNewMatchBtn" class="danger-btn" type="button">Ignorera</button>
+        <button id="cancelNewMatchBtn" class="secondary" type="button">Avbryt</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js?v=1.2.0"></script>
 </body>
 </html>
