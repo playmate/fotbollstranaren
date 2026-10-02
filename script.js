@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.0.0";
+const APP_VERSION = "v1.0.1";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 let PLAYERS = JSON.parse(localStorage.getItem("fotbollstranaren-players") || "null") || [...DEFAULT_PLAYERS];
@@ -37,19 +37,19 @@ const DEFAULT_EXERCISES = {
   ],
   shooting: [
     { id: "coachpass", title: "Passning från tränare → skott", description: "Tränaren passar fram bollen. Spelaren tar emot och avslutar mot mål.", items: [
-      {type:"coach", name:"Tränare", x:50, y:78}, {type:"ball", x:50, y:62}, {type:"player", name:"Liam", x:50, y:48}, {type:"player", name:"Ian", x:50, y:12}
+      {type:"coach", name:"Tränare", x:50, y:82}, {type:"ball", x:50, y:66}, {type:"player", name:"Liam", x:50, y:52}, {type:"player", name:"Ian", x:50, y:10}
     ]},
     { id: "coneshoot", title: "Dribbla mellan konor + skott", description: "Dribbla mellan konorna och avsluta mot mål.", items: [
-      {type:"player", name:"Liam", x:50, y:82}, {type:"ball", x:50, y:74}, {type:"cone", x:43, y:63}, {type:"cone", x:57, y:53}, {type:"cone", x:43, y:43}, {type:"cone", x:57, y:33}, {type:"player", name:"Ian", x:50, y:12}
+      {type:"player", name:"Liam", x:50, y:88}, {type:"ball", x:50, y:80}, {type:"cone", x:43, y:68}, {type:"cone", x:57, y:56}, {type:"cone", x:43, y:44}, {type:"cone", x:57, y:32}, {type:"player", name:"Ian", x:50, y:10}
     ]},
     { id: "twogoals", title: "Vänster eller höger", description: "Tränaren ropar vänster eller höger. Spelaren ska snabbt välja sida och avsluta.", items: [
-      {type:"player", name:"Liam", x:50, y:72}, {type:"ball", x:50, y:62}, {type:"cone", x:25, y:20}, {type:"cone", x:75, y:20}
+      {type:"player", name:"Liam", x:50, y:78}, {type:"ball", x:50, y:66}, {type:"cone", x:32, y:20}, {type:"cone", x:68, y:20}
     ]},
     { id: "wallshot", title: "Skott efter väggpass", description: "Passa tränaren, få tillbaka bollen i fart och avsluta.", items: [
-      {type:"player", name:"Liam", x:25, y:70}, {type:"coach", name:"Tränare", x:50, y:52}, {type:"ball", x:35, y:64}, {type:"player", name:"Ian", x:50, y:12}
+      {type:"player", name:"Liam", x:35, y:78}, {type:"coach", name:"Tränare", x:55, y:58}, {type:"ball", x:43, y:70}, {type:"player", name:"Ian", x:50, y:10}
     ]},
     { id: "onevone", title: "1 mot 1 mot målvakt", description: "Tränaren spelar fram bollen. Spelaren driver mot mål och försöker avsluta.", items: [
-      {type:"coach", name:"Tränare", x:50, y:80}, {type:"ball", x:50, y:66}, {type:"player", name:"Liam", x:50, y:55}, {type:"player", name:"Ian", x:50, y:12}
+      {type:"coach", name:"Tränare", x:50, y:86}, {type:"ball", x:50, y:72}, {type:"player", name:"Liam", x:50, y:58}, {type:"player", name:"Ian", x:50, y:10}
     ]}
   ]
 };
@@ -954,7 +954,7 @@ function openGoalScorerModal() {
   `;
 
   benchRoot.innerHTML = bench.length ? `
-    <div class="goal-scorer-section-title">På bänken <span>om du glömt göra bytet</span></div>
+    <div class="goal-scorer-section-title">På bänken</div>
     <div class="goal-scorer-list">
       ${bench.map(name => `<button type="button" class="goal-scorer-player on-bench" data-goal-scorer="${name}">${name}</button>`).join("")}
     </div>
