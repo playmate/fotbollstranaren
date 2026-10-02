@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.4.0";
+const APP_VERSION = "v0.4.2";
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const ROLE_ORDER = {"1":1,"2":2,"3":3,"4":4,"MV":5};
@@ -44,7 +44,8 @@ const exercises = {
 let objectCounter = 0;
 let currentCategory = "passing";
 let currentExerciseIndex = 0;
-let stopwatchElapsedMs = 0;
+let currentHalf = 0;
+const halfElapsedMs = [0, 0, 0];
 let stopwatchStartedAt = null;
 let stopwatchTimerId = null;
 let stopwatchLastTick = null;
@@ -355,14 +356,28 @@ function tickPlayerStats(deltaSeconds) {
 
 function updatePlaytimeStats() {
   const activeNames = new Set(getActivePlayerNames());
-  const nowRunningSeconds = stopwatchStartedAt ? (Date.now() - stopwatchLastTick) / 1000 : 0;
-  const list = PLAYERS.map(name => {
+  const nowRunningSeconds = stopwatchStartedAt && stopwatchLastTick ? (Date.now() - stopwatchLastTick) / 1000 : 0;
+
+  const sorted = PLAYERS.map((name, originalIndex) => {
     const base = playerStats[name]?.seconds || 0;
     const live = activeNames.has(name) && stopwatchStartedAt ? base + nowRunningSeconds : base;
-    const status = activeNames.has(name) ? 'På plan' : 'Bänk';
-    const statusClass = activeNames.has(name) ? 'active' : '';
-    return `<div class="playtime-row"><div>${name}</div><div class="playtime-status ${statusClass}">${status}</div><div class="playtime-time">${fmtTime(live)}</div></div>`;
+    return {
+      name,
+      live,
+      originalIndex,
+      active: activeNames.has(name)
+    };
+  }).sort((a, b) => {
+    if (a.live !== b.live) return a.live - b.live;
+    return a.originalIndex - b.originalIndex;
+  });
+
+  const list = sorted.map((player, index) => {
+    const status = player.active ? 'På plan' : 'Bänk';
+    const statusClass = player.active ? 'active' : '';
+    return `<div class="playtime-row"><span class="playtime-rank">${index + 1}</span><div>${player.name}</div><div class="playtime-status ${statusClass}">${status}</div><div class="playtime-time">${fmtTime(player.live)}</div></div>`;
   }).join("");
+
   const target = document.getElementById("playtimeStats");
   if (target) target.innerHTML = list;
 }
@@ -477,9 +492,21 @@ function initTheme() {
   if (themeToggle) themeToggle.onclick = () => applyTheme(document.body.dataset.theme === "dark" ? "light" : "dark");
 }
 
+function getCurrentHalfElapsedMs() {
+  return halfElapsedMs[currentHalf] + (stopwatchStartedAt ? (Date.now() - stopwatchStartedAt) : 0);
+}
+
+function updateHalfUI() {
+  const label = document.getElementById("halfLabel");
+  if (label) label.textContent = `Halvlek ${currentHalf + 1} av 3`;
+
+  document.querySelectorAll(".half-btn").forEach(btn => {
+    btn.classList.toggle("active", Number(btn.dataset.half) === currentHalf);
+  });
+}
+
 function updateStopwatchDisplay() {
-  const totalMs = stopwatchElapsedMs + (stopwatchStartedAt ? (Date.now() - stopwatchStartedAt) : 0);
-  document.getElementById("stopwatchDisplay").textContent = fmtTime(totalMs / 1000);
+  document.getElementById("stopwatchDisplay").textContent = fmtTime(getCurrentHalfElapsedMs() / 1000);
 }
 
 function onStopwatchTick() {
@@ -495,7 +522,7 @@ function onStopwatchTick() {
 function startStopwatch() {
   if (stopwatchStartedAt) return;
   stopwatchStartedAt = Date.now();
-  stopwatchLastTick = Date.now();
+  stopwatchLastTick = stopwatchStartedAt;
   stopwatchTimerId = setInterval(onStopwatchTick, 250);
   document.getElementById("stopwatchToggle").textContent = "Pausa";
   updateStopwatchDisplay();
@@ -504,33 +531,62 @@ function startStopwatch() {
 function pauseStopwatch() {
   if (!stopwatchStartedAt) return;
   onStopwatchTick();
-  stopwatchElapsedMs += Date.now() - stopwatchStartedAt;
+  halfElapsedMs[currentHalf] += Date.now() - stopwatchStartedAt;
   stopwatchStartedAt = null;
   stopwatchLastTick = null;
-  clearInterval(stopwatchTimerId); stopwatchTimerId = null;
+  clearInterval(stopwatchTimerId);
+  stopwatchTimerId = null;
   document.getElementById("stopwatchToggle").textContent = "Starta";
   updateStopwatchDisplay();
+  updatePlaytimeStats();
 }
 
-function resetStopwatchAndStats() {
-  pauseStopwatch();
-  stopwatchElapsedMs = 0;
+function switchHalf(nextHalf) {
+  if (nextHalf < 0 || nextHalf > 2 || nextHalf === currentHalf) return;
+  const wasRunning = Boolean(stopwatchStartedAt);
+  if (wasRunning) pauseStopwatch();
+  currentHalf = nextHalf;
+  updateHalfUI();
   updateStopwatchDisplay();
+  if (wasRunning) startStopwatch();
+}
+
+function resetCurrentHalf() {
+  const wasRunning = Boolean(stopwatchStartedAt);
+  if (wasRunning) pauseStopwatch();
+  halfElapsedMs[currentHalf] = 0;
+  updateStopwatchDisplay();
+  if (wasRunning) startStopwatch();
+}
+
+function resetAllMatchTimeAndStats() {
+  if (stopwatchStartedAt) pauseStopwatch();
+  halfElapsedMs.fill(0);
+  currentHalf = 0;
   resetPlayerStats();
+  updateHalfUI();
+  updateStopwatchDisplay();
   updatePlayerCardsTimes();
 }
 
 function initStopwatch() {
   document.getElementById("stopwatchToggle").onclick = () => stopwatchStartedAt ? pauseStopwatch() : startStopwatch();
-  document.getElementById("stopwatchReset").onclick = resetStopwatchAndStats;
+  document.getElementById("stopwatchReset").onclick = resetCurrentHalf;
+
+  document.querySelectorAll(".half-btn").forEach(btn => {
+    btn.onclick = () => switchHalf(Number(btn.dataset.half));
+  });
+
+  updateHalfUI();
   updateStopwatchDisplay();
+  updatePlaytimeStats();
 }
 
 document.getElementById("resetAllBtn").onclick = () => {
   resetMatch();
   currentCategory = "passing"; currentExerciseIndex = 0;
   document.querySelectorAll(".subtab").forEach((b,i) => b.classList.toggle("active", i===0));
-  renderExerciseList(); loadExercise(); resetStopwatchAndStats();
+  renderExerciseList(); loadExercise(); resetAllMatchTimeAndStats();
 };
 
 function initVersionTracker() {
