@@ -46,7 +46,8 @@ function createEmptyPlayerStats() {
     keeperHalves: makePeriodArray(),
     stintSeconds: 0,
     benchStintSeconds: 0,
-    stintAlerted: false
+    stintAlerted: false,
+    benchAlerted: false
   };
 }
 
@@ -214,7 +215,8 @@ function saveCurrentMatchState() {
       keeperHalves: normalizePeriodArray(playerStats[name]?.keeperHalves),
       stintSeconds: Number(playerStats[name]?.stintSeconds) || 0,
       benchStintSeconds: Number(playerStats[name]?.benchStintSeconds) || 0,
-      stintAlerted: Boolean(playerStats[name]?.stintAlerted)
+      stintAlerted: Boolean(playerStats[name]?.stintAlerted),
+      benchAlerted: Boolean(playerStats[name]?.benchAlerted)
     }])),
     pitchObjects: getPitchState(),
     benchPlayers: [...document.querySelectorAll("#bench .bench-player")].map(el => el.dataset.name)
@@ -270,6 +272,7 @@ function restoreCurrentMatchState() {
     playerStats[name].stintSeconds = Number(saved.stintSeconds) || 0;
     playerStats[name].benchStintSeconds = Number(saved.benchStintSeconds) || 0;
     playerStats[name].stintAlerted = Boolean(saved.stintAlerted);
+    playerStats[name].benchAlerted = Boolean(saved.benchAlerted);
   });
 
   pitch.querySelectorAll(".token").forEach(el => el.remove());
@@ -423,6 +426,7 @@ function resetSubstitutionClock(name) {
   playerStats[name].stintSeconds = 0;
   playerStats[name].benchStintSeconds = 0;
   playerStats[name].stintAlerted = false;
+  playerStats[name].benchAlerted = false;
 }
 
 function getLiveStintSeconds(name) {
@@ -1039,6 +1043,17 @@ function renderLineupPanel() {
   renderPlaytimeRoster();
 }
 
+async function triggerBenchVibration() {
+  try {
+    const haptics = window.Capacitor?.Plugins?.Haptics;
+    if (haptics?.vibrate) {
+      await haptics.vibrate({ duration: 120 });
+      return;
+    }
+  } catch {}
+  if (navigator.vibrate) navigator.vibrate(120);
+}
+
 async function triggerSubstitutionVibration() {
   try {
     const haptics = window.Capacitor?.Plugins?.Haptics;
@@ -1084,6 +1099,10 @@ function tickPlayerStats(deltaSeconds) {
     } else {
       stats.benchHalves[currentHalf] += deltaSeconds;
       stats.benchStintSeconds = (Number(stats.benchStintSeconds) || 0) + deltaSeconds;
+      if (stats.benchStintSeconds >= (6.5 * 60) && !stats.benchAlerted) {
+        stats.benchAlerted = true;
+        triggerBenchVibration();
+      }
     }
   });
 }
@@ -1170,6 +1189,8 @@ function resetPlayerStats() {
     playerStats[name].keeperHalves = makePeriodArray();
     playerStats[name].stintSeconds = 0;
     playerStats[name].benchStintSeconds = 0;
+    playerStats[name].stintAlerted = false;
+    playerStats[name].benchAlerted = false;
   });
   updatePlaytimeStats();
 }
