@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.9.1";
+const APP_VERSION = "v0.9.2";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 let PLAYERS = JSON.parse(localStorage.getItem("fotbollstranaren-players") || "null") || [...DEFAULT_PLAYERS];
