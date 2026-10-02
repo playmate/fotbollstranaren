@@ -2510,3 +2510,77 @@ button.secondary:hover {
   font-size: 9px;
   font-weight: 800;
 }
+
+
+/* v1.6.0 - streamlined Playtime layout */
+.playtime-quick-controls {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.playtime-period-control {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.playtime-period-control .half-label {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.playtime-period-control .half-tabs {
+  display: flex;
+  gap: 7px;
+  margin: 0;
+}
+
+.playtime-period-control .half-btn {
+  min-width: 48px;
+}
+
+.playtime-action-buttons {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.playtime-action-buttons .save-match-btn {
+  width: auto;
+  min-width: 130px;
+  margin-top: 0;
+}
+
+.playtime-swap-panel {
+  width: 100%;
+}
+
+.playtime-hidden-plan {
+  display: none !important;
+}
+
+@media (max-width: 640px) {
+  .playtime-quick-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .playtime-period-control {
+    justify-content: space-between;
+  }
+
+  .playtime-action-buttons {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .playtime-action-buttons button {
+    flex: 1;
+  }
+}
