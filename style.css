@@ -2095,3 +2095,70 @@ button.secondary:hover {
     padding-inline: 8px;
   }
 }
+
+
+/* v1.2.0 - explicit new match flow */
+.match-empty-state {
+  min-height: min(62vh, 560px);
+  display: grid;
+  place-items: center;
+}
+
+.match-empty-state[hidden],
+#matchActiveContent[hidden] {
+  display: none !important;
+}
+
+.new-match-hero-btn {
+  min-width: 220px;
+  min-height: 64px;
+  padding: 16px 28px;
+  border-radius: 16px;
+  font-size: 20px;
+  box-shadow: 0 12px 28px rgba(0,0,0,.28);
+}
+
+.opponent-team-label {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.compact-match-modal {
+  width: min(440px, 100%);
+}
+
+.new-match-opponent-form {
+  display: grid;
+  gap: 10px;
+}
+
+.new-match-opponent-form input {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #111916;
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+
+.new-match-opponent-form input:focus {
+  border-color: #54b47f;
+  box-shadow: 0 0 0 3px rgba(84,180,127,.14);
+}
+
+.ongoing-match-actions {
+  display: grid;
+  gap: 9px;
+  margin-top: 8px;
+}
+
+.ongoing-match-actions button {
+  width: 100%;
+  min-height: 46px;
+}
