@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.16";
+const APP_VERSION = "v1.6.17";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -1569,7 +1569,11 @@ function updateMatchPitchAndBenchTimes() {
 
   document.querySelectorAll('#bench .bench-player').forEach(el => {
     const time = el.querySelector(".match-bench-live-time");
-    if (time && el.dataset.name) time.textContent = `Bänktid ${fmtTime(getLiveBenchStintSeconds(el.dataset.name))}`;
+    if (time && el.dataset.name) {
+      const benchSeconds = getLiveBenchStintSeconds(el.dataset.name);
+      time.textContent = `Bänktid ${fmtTime(benchSeconds)}`;
+      time.classList.toggle("is-over-bench-time", benchSeconds >= (5 * 60));
+    }
   });
 }
 
