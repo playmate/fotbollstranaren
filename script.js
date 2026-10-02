@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.6.0";
+const APP_VERSION = "v0.6.1";
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const ROLE_ORDER = {"1":1,"2":2,"3":3,"4":4,"MV":5};
@@ -590,15 +590,6 @@ function wireMatchTools() {
   const pitch = document.getElementById("matchPitch");
   document.getElementById("resetMatchBtn").onclick = resetMatch;
   document.getElementById("clearOppBtn").onclick = () => { pitch.querySelectorAll(".opponent").forEach(x => x.remove()); updateMatchInfo(); };
-  document.getElementById("addOpponent").onclick = () => {
-    const used = new Set([...pitch.querySelectorAll(".player-token.opponent")].map(el => el.dataset.indicator).filter(Boolean));
-    const indicator = ["1","2","3","4","MV"].find(value => !used.has(value)) || String(used.size + 1);
-    placeToken(pitch, createToken("player", {name:"Motståndare", indicator, opponent:true}), 50, 20);
-    updateMatchInfo();
-  };
-  document.getElementById("addBall").onclick = () => placeToken(pitch, createToken("ball"), 50, 50);
-  document.getElementById("addCone").onclick = () => placeToken(pitch, createToken("cone"), 50, 50);
-  document.getElementById("addCoach").onclick = () => placeToken(pitch, createToken("coach", {name:"Tränare"}), 50, 50);
 }
 
 function renderPlayerCards() {
@@ -625,6 +616,16 @@ function setTrainingCategory() {
     btn.classList.add("active"); currentCategory = btn.dataset.category; currentExerciseIndex = 0; renderExerciseList(); loadExercise();
   }));
 }
+function renumberTrainingPlayers() {
+  const pitch = document.getElementById("exercisePitch");
+  const players = [...pitch.querySelectorAll('.player-token:not(.coach)')];
+
+  players.forEach((el, index) => {
+    el.dataset.trainingNumber = String(index + 1);
+    el.textContent = String(index + 1);
+  });
+}
+
 function renderExerciseList() {
   const root = document.getElementById("exerciseList"); root.innerHTML = "";
   exercises[currentCategory].forEach((ex, idx) => {
@@ -639,28 +640,22 @@ function loadExercise() {
   document.getElementById("exerciseDescription").textContent = ex.description;
   const pitch = document.getElementById("exercisePitch"); pitch.querySelectorAll(".token").forEach(x => x.remove());
   ex.items.forEach(item => { const token = createToken(item.type, {name:item.name}); placeToken(pitch, token, item.x, item.y); });
+  renumberTrainingPlayers();
 }
 function wireTrainingTools() {
   const pitch = document.getElementById("exercisePitch");
   document.getElementById("resetExerciseBtn").onclick = loadExercise;
-  document.getElementById("exAddPlayer").onclick = () => placeToken(pitch, createToken("player", {name:"Spelare"}), 50, 70);
+  document.getElementById("exAddPlayer").onclick = () => {
+    placeToken(pitch, createToken("player", {name:"Spelare"}), 50, 70);
+    renumberTrainingPlayers();
+  };
   document.getElementById("exAddBall").onclick = () => placeToken(pitch, createToken("ball"), 50, 50);
   document.getElementById("exAddCone").onclick = () => placeToken(pitch, createToken("cone"), 50, 50);
   document.getElementById("exAddCoach").onclick = () => placeToken(pitch, createToken("coach", {name:"Tränare"}), 50, 50);
 }
 
-function applyTheme(theme) {
-  document.body.dataset.theme = theme;
-  const themeToggle = document.getElementById("themeToggle");
-  if (themeToggle) themeToggle.textContent = theme === "dark" ? "☀️ Ljust läge" : "🌙 Mörkt läge";
-  localStorage.setItem("fotbollstranaren-theme", theme);
-}
 function initTheme() {
-  const savedTheme = localStorage.getItem("fotbollstranaren-theme");
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  applyTheme(savedTheme || (prefersDark ? "dark" : "light"));
-  const themeToggle = document.getElementById("themeToggle");
-  if (themeToggle) themeToggle.onclick = () => applyTheme(document.body.dataset.theme === "dark" ? "light" : "dark");
+  document.body.dataset.theme = "dark";
 }
 
 function getCurrentHalfElapsedMs() {
