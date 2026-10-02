@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=0.5.2" />
+  <link rel="stylesheet" href="style.css?v=0.6.0" />
 </head>
 <body>
   <header class="topbar">
@@ -17,7 +17,7 @@
     </div>
     <div id="versionTracker" class="version-tracker" title="Versionsstatus">
       <span class="version-dot"></span>
-      <span id="versionText">Version v0.5.2</span>
+      <span id="versionText">Version v0.6.0</span>
     </div>
   </header>
 
@@ -54,39 +54,39 @@
         </div>
 
         <aside class="side-panel">
-          <div class="panel">
-            <h3>Bänk</h3>
-            <div id="bench" class="bench dropzone"></div>
-            <div class="hint">Dra en spelare till planen eller tillbaka hit.</div>
-          </div>
+          <div class="panel lineup-panel">
+            <div class="lineup-panel-head">
+              <h3>Uppställning</h3>
+              <span id="halfLabel" class="half-label">Halvlek 1 av 3</span>
+            </div>
 
-          <div class="panel">
-            <h3>Speltid</h3>
-            <div class="half-section">
-              <div class="half-heading-row">
-                <span class="roster-heading">Halvlekar</span>
-                <span id="halfLabel" class="half-label">Halvlek 1 av 3</span>
+            <div class="half-tabs" id="halfTabs">
+              <button class="half-btn active" data-half="0">1</button>
+              <button class="half-btn" data-half="1">2</button>
+              <button class="half-btn" data-half="2">3</button>
+            </div>
+
+            <div class="lineup-timer-row">
+              <div>
+                <div class="lineup-timer-label">Tid i vald halvlek</div>
+                <div id="stopwatchDisplay" class="stopwatch-display">00:00</div>
               </div>
-              <div class="half-tabs" id="halfTabs">
-                <button class="half-btn active" data-half="0">1</button>
-                <button class="half-btn" data-half="1">2</button>
-                <button class="half-btn" data-half="2">3</button>
+              <div class="stopwatch-actions">
+                <button id="stopwatchToggle">Starta</button>
+                <button id="stopwatchReset" class="secondary">Nollställ</button>
               </div>
             </div>
 
-            <div id="stopwatchDisplay" class="stopwatch-display">00:00</div>
-            <div class="stopwatch-actions">
-              <button id="stopwatchToggle">Starta</button>
-              <button id="stopwatchReset" class="secondary">Nollställ</button>
+            <div class="lineup-columns">
+              <span>Spelare</span>
+              <span id="lineupHalfColumn">H1</span>
+              <span>Totalt</span>
             </div>
 
-            <div class="playtime-section playtime-section-visible">
-              <div class="playtime-title-row">
-                <div class="roster-heading">Individuell speltid</div>
-                <div id="playtimeViewLabel" class="playtime-sort-note">Halvlek 1 + totalt</div>
-              </div>
-              <div id="playtimeStats" class="playtime-stats"></div>
-            </div>
+            <div id="activeLineupRows" class="lineup-list lineup-active-list"></div>
+
+            <div id="bench" class="bench lineup-list lineup-bench dropzone"></div>
+            <div class="hint">Dra mellan planen och listan, eller släpp på en spelare för direkt byte.</div>
           </div>
 
           <details class="panel collapsible-panel">
@@ -208,6 +208,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=0.5.2"></script>
+  <script src="script.js?v=0.6.0"></script>
 </body>
 </html>
