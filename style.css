@@ -957,3 +957,207 @@ button.secondary:hover {
   font-weight: 700;
   white-space: nowrap;
 }
+
+
+/* v0.8.0 - mobile-friendly separate playtime page */
+.match-layout {
+  grid-template-columns: minmax(0, 1fr) 300px;
+}
+
+.match-bench-panel {
+  padding: 14px;
+}
+
+.match-bench-panel .lineup-panel-head {
+  margin-bottom: 8px;
+}
+
+.match-bench-player-info {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+}
+
+.match-bench-panel .lineup-bench .bench-player {
+  display: flex !important;
+  grid-template-columns: none !important;
+  align-items: center;
+  justify-content: flex-start !important;
+}
+
+.playtime-page-layout {
+  display: grid;
+  grid-template-columns: minmax(250px, 340px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.playtime-control-panel,
+.playtime-swap-panel {
+  padding: 16px;
+}
+
+.playtime-control-panel .lineup-timer-row {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.playtime-swap-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.playtime-swap-head h3 {
+  margin-bottom: 4px;
+}
+
+.playtime-swap-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.compact-btn {
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+
+.playtime-columns,
+.playtime-player-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 62px 66px;
+  gap: 8px;
+  align-items: center;
+}
+
+.playtime-columns {
+  padding: 0 12px 7px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.playtime-columns span:not(:first-child) {
+  text-align: right;
+}
+
+.playtime-click-roster {
+  display: grid;
+  gap: 8px;
+}
+
+.playtime-player-row {
+  width: 100%;
+  min-height: 62px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #202d26;
+  color: var(--text);
+  text-align: left;
+  transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+.playtime-player-row:hover {
+  background: #26352d;
+}
+
+.playtime-player-row.selected {
+  border-color: #66c990;
+  background: #294536;
+  box-shadow: 0 0 0 3px rgba(102,201,144,.18);
+}
+
+.playtime-player-row.selected .playtime-player-name::after {
+  content: "Markerad";
+  margin-left: 6px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: #66c990;
+  color: #102118;
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.playtime-player-main {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.playtime-player-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.playtime-bench-detail {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 950px) {
+  .match-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .playtime-page-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .match-bench-panel {
+    order: 2;
+  }
+}
+
+@media (max-width: 640px) {
+  main {
+    padding: 14px;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    padding: 10px 12px;
+  }
+
+  .tab {
+    flex: 0 0 auto;
+  }
+
+  .page-title-row {
+    display: grid;
+    gap: 12px;
+  }
+
+  .playtime-player-row,
+  .playtime-columns {
+    grid-template-columns: minmax(0, 1fr) 54px 58px;
+  }
+
+  .playtime-player-row {
+    min-height: 58px;
+    padding: 9px 10px;
+  }
+
+  .playtime-swap-head {
+    display: grid;
+  }
+
+  .compact-btn {
+    width: 100%;
+  }
+
+  .match-bench-panel .bench-player {
+    min-height: 48px !important;
+  }
+}
