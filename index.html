@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fotbollstränaren</title>
-  <link rel="stylesheet" href="style.css?v=0.4.3" />
+  <link rel="stylesheet" href="style.css?v=0.5.0" />
 </head>
 <body>
   <header class="topbar">
@@ -17,7 +17,7 @@
     </div>
     <div id="versionTracker" class="version-tracker" title="Versionsstatus">
       <span class="version-dot"></span>
-      <span id="versionText">Version v0.4.3</span>
+      <span id="versionText">Version v0.5.0</span>
     </div>
   </header>
 
@@ -25,6 +25,7 @@
     <button class="tab active" data-tab="match">Match</button>
     <button class="tab" data-tab="training">Träning</button>
     <button class="tab" data-tab="players">Spelare</button>
+    <button class="tab" data-tab="statistics">Statistik</button>
   </nav>
 
   <main>
@@ -179,8 +180,54 @@
       </div>
       <div id="playerCards" class="player-cards"></div>
     </section>
+
+    <section id="statistics" class="page">
+      <div class="page-title-row">
+        <div>
+          <h2>Statistik</h2>
+          <p>Speltid per halvlek och totalt. Minst total speltid visas först.</p>
+        </div>
+      </div>
+
+      <div class="stats-summary-grid">
+        <div class="panel stats-summary-card">
+          <span>Halvlek 1</span>
+          <strong id="statsHalf1">00:00</strong>
+        </div>
+        <div class="panel stats-summary-card">
+          <span>Halvlek 2</span>
+          <strong id="statsHalf2">00:00</strong>
+        </div>
+        <div class="panel stats-summary-card">
+          <span>Halvlek 3</span>
+          <strong id="statsHalf3">00:00</strong>
+        </div>
+        <div class="panel stats-summary-card">
+          <span>Total matchtid</span>
+          <strong id="statsMatchTotal">00:00</strong>
+        </div>
+      </div>
+
+      <div class="panel statistics-panel">
+        <div class="statistics-table-wrap">
+          <table class="statistics-table">
+            <thead>
+              <tr>
+                <th>Spelare</th>
+                <th>H1</th>
+                <th>H2</th>
+                <th>H3</th>
+                <th>Totalt</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="statisticsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <script src="script.js?v=0.4.3"></script>
+  <script src="script.js?v=0.5.0"></script>
 </body>
 </html>
