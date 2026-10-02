@@ -2869,3 +2869,46 @@ button.secondary:hover {
   font-size: 9px;
   font-weight: 900;
 }
+
+
+/* v1.6.11 - center match clock controls on mobile */
+.match-scoreboard {
+  grid-template-columns: minmax(0, 1fr) minmax(170px, 190px) minmax(0, 1fr);
+}
+
+.match-banner-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-width: 0;
+  padding: 10px 14px;
+}
+
+.match-banner-time {
+  width: 100%;
+  text-align: center;
+}
+
+.match-clock-toggle {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  justify-self: center;
+  margin: 8px auto 0;
+}
+
+@media (max-width: 640px) {
+  .match-scoreboard {
+    grid-template-columns: minmax(0, 1fr) 150px minmax(0, 1fr);
+  }
+
+  .match-banner-center {
+    padding: 8px 10px;
+  }
+
+  .match-clock-toggle {
+    margin: 8px auto 0;
+  }
+}
