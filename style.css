@@ -3172,3 +3172,13 @@ button.secondary:hover {
 .settings-vibration-status.is-error {
   color: #d87878;
 }
+
+
+/* v1.6.27 - bench time traffic-light thresholds */
+.match-bench-live-time.bench-time-orange {
+  color: #ffad3d;
+}
+
+.match-bench-live-time.bench-time-red {
+  color: #d86666;
+}
