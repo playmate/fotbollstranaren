@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.5.1";
+const APP_VERSION = "v0.5.2";
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const ROLE_ORDER = {"1":1,"2":2,"3":3,"4":4,"MV":5};
@@ -454,7 +454,7 @@ function getLivePlayerKeeperTotalSeconds(name) {
   return [0, 1, 2].reduce((sum, halfIndex) => sum + getLivePlayerKeeperHalfSeconds(name, halfIndex), 0);
 }
 
-function getSortedPlayerStats() {
+function getSortedPlayerStats(sortMode = "total") {
   const activeNames = new Set(getActivePlayerNames());
 
   return PLAYERS.map((name, originalIndex) => ({
@@ -468,22 +468,43 @@ function getSortedPlayerStats() {
     benchTotal: getLivePlayerBenchTotalSeconds(name),
     keeperTotal: getLivePlayerKeeperTotalSeconds(name)
   })).sort((a, b) => {
-    if (a.total !== b.total) return a.total - b.total;
+    const aValue = sortMode === "half" ? a.halves[currentHalf] : a.total;
+    const bValue = sortMode === "half" ? b.halves[currentHalf] : b.total;
+    if (aValue !== bValue) return aValue - bValue;
     return a.originalIndex - b.originalIndex;
   });
 }
 
 function updatePlaytimeStats() {
-  const sorted = getSortedPlayerStats();
+  const sorted = getSortedPlayerStats("half");
 
   const list = sorted.map((player, index) => {
     const status = player.active ? 'På plan' : 'Bänk';
     const statusClass = player.active ? 'active' : '';
-    return `<div class="playtime-row"><span class="playtime-rank">${index + 1}</span><div>${player.name}</div><div class="playtime-status ${statusClass}">${status}</div><div class="playtime-time">${fmtTime(player.total)}</div></div>`;
+    const halfTime = player.halves[currentHalf];
+
+    return `<div class="playtime-row">
+      <span class="playtime-rank">${index + 1}</span>
+      <div class="playtime-player-cell">
+        <strong>${player.name}</strong>
+        <span class="playtime-status ${statusClass}">${status}</span>
+      </div>
+      <div class="playtime-split">
+        <span class="playtime-mini-label">H${currentHalf + 1}</span>
+        <span class="playtime-time">${fmtTime(halfTime)}</span>
+      </div>
+      <div class="playtime-split">
+        <span class="playtime-mini-label">Tot</span>
+        <span class="playtime-time">${fmtTime(player.total)}</span>
+      </div>
+    </div>`;
   }).join("");
 
   const target = document.getElementById("playtimeStats");
   if (target) target.innerHTML = list;
+
+  const label = document.getElementById("playtimeViewLabel");
+  if (label) label.textContent = `Halvlek ${currentHalf + 1} + totalt`;
 
   renderStatistics();
 }
@@ -530,14 +551,19 @@ function updateMatchInfo() {
   const own = ownPlayers.length;
   const opp = pitch.querySelectorAll('.player-token.opponent').length;
   const benchCount = benchPlayers.length;
-  document.getElementById("matchInfo").innerHTML = `
-    <div class="stat"><span>Egna på plan</span><strong>${own}</strong></div>
-    <div class="stat"><span>Motståndare</span><strong>${opp}</strong></div>
-    <div class="stat"><span>På bänken</span><strong>${benchCount}</strong></div>`;
+  const matchInfo = document.getElementById("matchInfo");
+  if (matchInfo) {
+    matchInfo.innerHTML = `
+      <div class="stat"><span>Egna på plan</span><strong>${own}</strong></div>
+      <div class="stat"><span>Motståndare</span><strong>${opp}</strong></div>
+      <div class="stat"><span>På bänken</span><strong>${benchCount}</strong></div>`;
+  }
+
   const activeList = document.getElementById("activePlayersList");
   const benchList = document.getElementById("benchPlayersList");
   if (activeList) activeList.innerHTML = ownPlayers.sort((a,b)=>(ROLE_ORDER[a.dataset.indicator]||99)-(ROLE_ORDER[b.dataset.indicator]||99)).map(el => `<div class="roster-chip">${el.dataset.indicator} · ${el.dataset.name}</div>`).join("");
   if (benchList) benchList.innerHTML = benchPlayers.map(el => `<div class="roster-chip">${el.dataset.name}</div>`).join("");
+
   updatePlaytimeStats();
   renderStatistics();
 }
@@ -697,14 +723,25 @@ function switchHalf(nextHalf) {
   currentHalf = nextHalf;
   updateHalfUI();
   updateStopwatchDisplay();
+  updatePlaytimeStats();
   if (wasRunning) startStopwatch();
 }
 
 function resetCurrentHalf() {
   const wasRunning = Boolean(stopwatchStartedAt);
   if (wasRunning) pauseStopwatch();
+
   halfElapsedMs[currentHalf] = 0;
+  PLAYERS.forEach(name => {
+    playerStats[name].halves[currentHalf] = 0;
+    playerStats[name].benchHalves[currentHalf] = 0;
+    playerStats[name].keeperHalves[currentHalf] = 0;
+  });
+
   updateStopwatchDisplay();
+  updatePlaytimeStats();
+  updatePlayerCardsTimes();
+
   if (wasRunning) startStopwatch();
 }
 
