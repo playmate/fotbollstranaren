@@ -2500,3 +2500,13 @@ button.secondary:hover {
 .playtime-substitution-time.overdue-red strong {
   color: #ffd0d0;
 }
+
+
+/* v1.5.2 - substitution suggestion reason */
+.substitution-reason {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+}
