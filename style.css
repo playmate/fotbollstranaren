@@ -1692,3 +1692,34 @@ button.secondary:hover {
     flex-direction: column;
   }
 }
+
+
+/* v1.0.1 - cleaner tabs and vertical training pitch */
+.history-actions-only {
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.exercise-stage {
+  min-width: 0;
+}
+
+.exercise-pitch {
+  width: 100%;
+  max-width: 620px;
+  margin-inline: auto;
+  aspect-ratio: 2 / 3;
+  min-height: 0;
+}
+
+@media (max-width: 760px) {
+  .training-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .exercise-pitch {
+    max-width: none;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+  }
+}
