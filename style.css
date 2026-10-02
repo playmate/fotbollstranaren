@@ -3085,3 +3085,15 @@ button.secondary:hover {
 .match-bench-live-time.is-over-bench-time {
   color: #ffad3d;
 }
+
+
+/* v1.6.20 - half/period overtime shown beneath frozen clock */
+.match-banner-overtime.active,
+#overtimeDisplay.active {
+  display: block;
+  margin-top: 2px;
+  color: #b86b6b;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
