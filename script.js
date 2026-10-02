@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.31";
+const APP_VERSION = "v1.6.32";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -421,7 +421,7 @@ function getNextOwnIndicator() {
 function setMatchPlayerIndicator(el, indicator, name) {
   el.dataset.indicator = indicator;
   el.dataset.name = name;
-  el.innerHTML = `<span class="match-indicator">${indicator}</span><span class="match-player-name">${name}</span><span class="match-player-live-time">${fmtTime(getLivePlayerTotalSeconds(name))}</span>`;
+  el.innerHTML = `<span class="match-player-circle-name">${name}</span><span class="match-player-live-time">${fmtTime(getLiveStintSeconds(name))}</span>`;
 }
 
 function resetSubstitutionClock(name) {
