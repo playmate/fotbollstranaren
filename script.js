@@ -118,6 +118,7 @@ let stopwatchTimerId = null;
 let stopwatchLastTick = null;
 let selectedPlaytimePlayer = null;
 let currentSubstitutionSuggestion = null;
+let lastSubstitutionState = null;
 let matchScore = { home: 0, away: 0 };
 let goalEvents = [];
 let currentMatchActive = false;
@@ -978,11 +979,51 @@ function clearPlaytimePlayerSelection() {
   renderPlaytimeRoster();
 }
 
+function captureSubstitutionState() {
+  const pitch = document.getElementById("matchPitch");
+  const bench = document.getElementById("bench");
+  return {
+    pitchPlayers: [...pitch.querySelectorAll('.player-token:not(.opponent):not(.coach)')].map(el => ({
+      name: el.dataset.name, indicator: el.dataset.indicator, left: el.style.left, top: el.style.top
+    })),
+    benchPlayers: [...bench.querySelectorAll(".bench-player")].map(el => el.dataset.name),
+    playerStats: Object.fromEntries(PLAYERS.map(name => [name, JSON.parse(JSON.stringify(playerStats[name]))]))
+  };
+}
+
+function updateUndoSubstitutionButton() {
+  const btn = document.getElementById("undoSubstitutionBtn");
+  if (btn) btn.disabled = !lastSubstitutionState;
+}
+
+function undoLastSubstitution() {
+  if (!lastSubstitutionState) return;
+  const snapshot = lastSubstitutionState;
+  const pitch = document.getElementById("matchPitch");
+  const bench = document.getElementById("bench");
+  lastSubstitutionState = null;
+  pitch.querySelectorAll('.player-token:not(.opponent):not(.coach)').forEach(el => el.remove());
+  bench.innerHTML = "";
+  PLAYERS.forEach(name => { if (snapshot.playerStats[name]) playerStats[name] = JSON.parse(JSON.stringify(snapshot.playerStats[name])); });
+  snapshot.pitchPlayers.forEach(item => {
+    const el = createToken("player", {name:item.name, indicator:item.indicator});
+    pitch.appendChild(el);
+    el.style.left = item.left;
+    el.style.top = item.top;
+  });
+  snapshot.benchPlayers.forEach(name => addPlayerToBench(name));
+  selectedPlaytimePlayer = null;
+  currentSubstitutionSuggestion = null;
+  updateMatchInfo();
+  updateUndoSubstitutionButton();
+}
+
 function swapPlayersByClick(firstName, secondName) {
   const first = getPlayerSnapshot(firstName);
   const second = getPlayerSnapshot(secondName);
 
   if (!first.element || !second.element) return false;
+  const substitutionSnapshot = captureSubstitutionState();
 
   if (first.location === "pitch" && second.location === "bench") {
     resetSubstitutionClock(firstName);
@@ -1000,6 +1041,8 @@ function swapPlayersByClick(firstName, secondName) {
 
     first.element.remove();
     addPlayerToBench(firstName);
+    lastSubstitutionState = substitutionSnapshot;
+    updateUndoSubstitutionButton();
     return true;
   }
 
@@ -1483,6 +1526,7 @@ function beginNewMatch(opponentName) {
   currentMatchActive = true;
   selectedPlaytimePlayer = null;
   currentSubstitutionSuggestion = null;
+  lastSubstitutionState = null;
   resetMatchScore();
   halfElapsedMs = makePeriodArray();
   currentHalf = 0;
@@ -2567,6 +2611,10 @@ function initStopwatch() {
     if (!confirm(`Nollställ tiden och statistiken för aktuell ${word}?`)) return;
     resetCurrentHalf();
   };
+
+  const undoSubstitutionBtn = document.getElementById("undoSubstitutionBtn");
+  if (undoSubstitutionBtn) undoSubstitutionBtn.onclick = undoLastSubstitution;
+  updateUndoSubstitutionButton();
 
   const resetWholeMatchBtn = document.getElementById("resetWholeMatchBtn");
   if (resetWholeMatchBtn) {
