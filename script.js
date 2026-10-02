@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.6.18";
+const APP_VERSION = "v1.6.19";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -351,7 +351,7 @@ function createToken(type, opts = {}) {
     el.dataset.name = opts.name || "Spelare";
     if (opts.indicator) {
       el.dataset.indicator = opts.indicator;
-      el.innerHTML = `<span class="match-indicator">${opts.indicator}</span>${opts.opponent ? "" : `<span class="match-player-name">${opts.name || "Spelare"}</span><span class="match-player-live-time">${fmtTime(getLivePlayerTotalSeconds(opts.name || "Spelare"))}</span>`}`;
+      el.innerHTML = `<span class="match-indicator">${opts.indicator}</span>${opts.opponent ? "" : `<span class="match-player-name">${opts.name || "Spelare"}</span><span class="match-player-live-time">${fmtTime(getLiveStintSeconds(opts.name || "Spelare"))}</span>`}`;
     } else {
       el.textContent = opts.name || "Spelare";
     }
@@ -1563,8 +1563,9 @@ function updateMatchPitchAndBenchTimes() {
   document.querySelectorAll('#matchPitch .player-token:not(.opponent):not(.coach)').forEach(el => {
     const time = el.querySelector(".match-player-live-time");
     if (time && el.dataset.name) {
-      time.textContent = fmtTime(getLivePlayerTotalSeconds(el.dataset.name));
-      time.classList.toggle("is-over-substitution-time", getLiveStintSeconds(el.dataset.name) >= (5 * 60));
+      const stintSeconds = getLiveStintSeconds(el.dataset.name);
+      time.textContent = fmtTime(stintSeconds);
+      time.classList.toggle("is-over-substitution-time", stintSeconds >= (5 * 60));
     }
   });
 
