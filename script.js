@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.3.2";
+const APP_VERSION = "v1.3.3";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -192,6 +192,9 @@ function saveCurrentMatchState() {
     version: 2,
     active: true,
     savedAt: Date.now(),
+    clockRunning: Boolean(stopwatchStartedAt),
+    stopwatchStartedAt: stopwatchStartedAt || null,
+    stopwatchLastTick: stopwatchLastTick || null,
     currentHalf,
     halfElapsedMs: [...halfElapsedMs],
     matchScore: { ...matchScore },
@@ -231,6 +234,16 @@ function restoreCurrentMatchState() {
 
   currentHalf = Math.max(0, Math.min(matchSettings.periodCount - 1, Number(state.currentHalf) || 0));
   halfElapsedMs = normalizePeriodArray(state.halfElapsedMs);
+
+  if (state.clockRunning && Number(state.stopwatchStartedAt) > 0) {
+    stopwatchStartedAt = Number(state.stopwatchStartedAt);
+    stopwatchLastTick = Number(state.stopwatchLastTick) > 0
+      ? Number(state.stopwatchLastTick)
+      : Number(state.savedAt) || stopwatchStartedAt;
+  } else {
+    stopwatchStartedAt = null;
+    stopwatchLastTick = null;
+  }
 
   matchScore = {
     home: Math.max(0, Number(state.matchScore?.home) || 0),
@@ -1952,8 +1965,29 @@ function onStopwatchTick() {
   renderStatistics();
 }
 
+function resumeRunningStopwatch() {
+  if (!stopwatchStartedAt || stopwatchTimerId) return;
+
+  stopwatchTimerId = setInterval(onStopwatchTick, 250);
+
+  const stopwatchToggle = document.getElementById("stopwatchToggle");
+  if (stopwatchToggle) stopwatchToggle.textContent = "Pausa";
+
+  const matchClockToggle = document.getElementById("matchClockToggle");
+  if (matchClockToggle) {
+    matchClockToggle.textContent = "⏸";
+    matchClockToggle.setAttribute("aria-label", "Pausa matchklockan");
+    matchClockToggle.title = "Pausa matchklockan";
+  }
+
+  onStopwatchTick();
+}
+
 function startStopwatch() {
-  if (stopwatchStartedAt) return;
+  if (stopwatchStartedAt) {
+    resumeRunningStopwatch();
+    return;
+  }
   if (getTotalElapsedMs() >= getMatchTargetMs() + (5 * 60 * 1000)) {
     alert("Maximal övertid på 5 minuter är uppnådd.");
     return;
@@ -2163,12 +2197,33 @@ if (!restoreCurrentMatchState()) {
   setMatchActiveUI(false);
 }
 autoSaveReady = true;
-if (currentMatchActive) saveCurrentMatchState();
+if (currentMatchActive) {
+  if (stopwatchStartedAt) resumeRunningStopwatch();
+  saveCurrentMatchState();
+}
 
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden && stopwatchStartedAt) pauseStopwatch();
+  if (stopwatchStartedAt) {
+    if (!document.hidden) {
+      resumeRunningStopwatch();
+      onStopwatchTick();
+    } else {
+      onStopwatchTick();
+    }
+  }
   saveCurrentMatchState();
 });
-window.addEventListener("beforeunload", saveCurrentMatchState);
+
+window.addEventListener("pageshow", () => {
+  if (stopwatchStartedAt) {
+    resumeRunningStopwatch();
+    onStopwatchTick();
+  }
+});
+
+window.addEventListener("beforeunload", () => {
+  if (stopwatchStartedAt) onStopwatchTick();
+  saveCurrentMatchState();
+});
 
 initVersionTracker();
