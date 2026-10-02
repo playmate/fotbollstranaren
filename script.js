@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.4.2";
+const APP_VERSION = "v1.4.3";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -723,7 +723,7 @@ function renderPlaytimeRoster() {
 
   if (!root) return;
 
-  const snapshots = PLAYERS.map(name => {
+  const players = PLAYERS.map(name => {
     const snapshot = getPlayerSnapshot(name);
     return {
       ...snapshot,
@@ -733,13 +733,20 @@ function renderPlaytimeRoster() {
       keeperTime: getLivePlayerKeeperTotalSeconds(name),
       goals: getGoalCount(name)
     };
-  }).sort((a, b) => {
-    if (a.location !== b.location) return a.location === "pitch" ? -1 : 1;
-    if (a.location === "pitch") return (ROLE_ORDER[a.role] || 99) - (ROLE_ORDER[b.role] || 99);
-    return a.halfTime - b.halfTime;
   });
 
-  root.innerHTML = snapshots.map(player => {
+  const activePlayers = players
+    .filter(player => player.location === "pitch" && player.role !== "MV")
+    .sort((a, b) => (ROLE_ORDER[a.role] || 99) - (ROLE_ORDER[b.role] || 99));
+
+  const goalkeeperPlayers = players
+    .filter(player => player.location === "pitch" && player.role === "MV");
+
+  const benchPlayers = players
+    .filter(player => player.location === "bench")
+    .sort((a, b) => a.halfTime - b.halfTime || a.name.localeCompare(b.name, "sv"));
+
+  const renderPlayerRow = player => {
     const selected = player.name === selectedPlaytimePlayer ? " selected" : "";
     const status = player.location === "pitch" ? "På plan" : "På bänken";
     const statusClass = player.location === "pitch" ? "on-pitch" : "on-bench";
@@ -771,7 +778,27 @@ function renderPlaytimeRoster() {
         <div class="lineup-time">${fmtTime(player.totalTime)}</div>
       </button>
     `;
-  }).join("");
+  };
+
+  const renderGroup = (title, playersInGroup, className) => `
+    <section class="playtime-group-card ${className}">
+      <div class="playtime-group-head">
+        <h4>${title}</h4>
+        <span>${playersInGroup.length}</span>
+      </div>
+      <div class="playtime-group-list">
+        ${playersInGroup.length
+          ? playersInGroup.map(renderPlayerRow).join("")
+          : '<div class="playtime-group-empty">Inga spelare</div>'}
+      </div>
+    </section>
+  `;
+
+  root.innerHTML = [
+    renderGroup("Aktiva spelare", activePlayers, "playtime-group-active"),
+    renderGroup("Nuvarande målvakt", goalkeeperPlayers, "playtime-group-keeper"),
+    renderGroup("Bänk", benchPlayers, "playtime-group-bench")
+  ].join("");
 
   root.querySelectorAll("[data-playtime-player]").forEach(btn => {
     btn.onclick = () => handlePlaytimePlayerClick(btn.dataset.playtimePlayer);
