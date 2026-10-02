@@ -2454,3 +2454,19 @@ button.secondary:hover {
   font-size: 11px;
   text-align: center;
 }
+
+
+/* v1.5.0 - match scoreboard mirrored on Playtime */
+.playtime-match-scoreboard {
+  margin-bottom: 16px;
+}
+
+.playtime-match-scoreboard[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 640px) {
+  .playtime-match-scoreboard {
+    margin-bottom: 12px;
+  }
+}
