@@ -2160,23 +2160,29 @@ function onStopwatchTick() {
   renderStatistics();
 }
 
+function setStopwatchControlState(isRunning) {
+  const hiddenToggle = document.getElementById("stopwatchToggle");
+  if (hiddenToggle) hiddenToggle.textContent = isRunning ? "Pausa" : "Starta";
+
+  ["matchClockToggle", "playtimeMatchClockToggle"].forEach(id => {
+    const button = document.getElementById(id);
+    if (!button) return;
+    button.textContent = isRunning ? "⏸" : "▶";
+    button.setAttribute("aria-label", isRunning ? "Pausa matchklockan" : "Starta matchklockan");
+    button.title = isRunning ? "Pausa matchklockan" : "Starta matchklockan";
+  });
+}
+
+function toggleStopwatch() {
+  if (stopwatchStartedAt) pauseStopwatch();
+  else startStopwatch();
+}
+
 function resumeRunningStopwatch() {
   if (!stopwatchStartedAt || stopwatchTimerId) return;
 
   stopwatchTimerId = setInterval(onStopwatchTick, 250);
-
-  const stopwatchToggle = document.getElementById("stopwatchToggle");
-  if (stopwatchToggle) stopwatchToggle.textContent = "Pausa";
-
-  ["matchClockToggle", "playtimeMatchClockToggle"].forEach(id => {
-    const button = document.getElementById(id);
-    if (button) {
-      button.textContent = "⏸";
-      button.setAttribute("aria-label", "Pausa matchklockan");
-      button.title = "Pausa matchklockan";
-    }
-  });
-
+  setStopwatchControlState(true);
   onStopwatchTick();
 }
 
@@ -2192,14 +2198,9 @@ function startStopwatch() {
   stopwatchStartedAt = Date.now();
   stopwatchLastTick = stopwatchStartedAt;
   stopwatchTimerId = setInterval(onStopwatchTick, 250);
-  document.getElementById("stopwatchToggle").textContent = "Pausa";
-  const matchClockToggle = document.getElementById("matchClockToggle");
-  if (matchClockToggle) {
-    matchClockToggle.textContent = "⏸";
-    matchClockToggle.setAttribute("aria-label", "Pausa matchklockan");
-    matchClockToggle.title = "Pausa matchklockan";
-  }
+  setStopwatchControlState(true);
   updateStopwatchDisplay();
+  saveCurrentMatchState();
 }
 
 function pauseStopwatch() {
@@ -2212,17 +2213,10 @@ function pauseStopwatch() {
   stopwatchLastTick = null;
   clearInterval(stopwatchTimerId);
   stopwatchTimerId = null;
-  document.getElementById("stopwatchToggle").textContent = "Starta";
-  ["matchClockToggle", "playtimeMatchClockToggle"].forEach(id => {
-    const button = document.getElementById(id);
-    if (button) {
-      button.textContent = "▶";
-      button.setAttribute("aria-label", "Starta matchklockan");
-      button.title = "Starta matchklockan";
-    }
-  });
+  setStopwatchControlState(false);
   updateStopwatchDisplay();
   updatePlaytimeStats();
+  saveCurrentMatchState();
 }
 
 function switchHalf(nextHalf) {
@@ -2264,6 +2258,27 @@ function resetAllMatchTimeAndStats() {
   updateHalfUI();
   updateStopwatchDisplay();
   updatePlayerCardsTimes();
+}
+
+function resetWholeCurrentMatch() {
+  if (stopwatchStartedAt) pauseStopwatch();
+
+  selectedPlaytimePlayer = null;
+  currentSubstitutionSuggestion = null;
+  halfElapsedMs = makePeriodArray();
+  currentHalf = 0;
+  resetMatchScore();
+
+  PLAYERS.forEach(name => {
+    playerStats[name] = createEmptyPlayerStats();
+  });
+
+  updateHalfUI();
+  updateStopwatchDisplay();
+  renderPlaytimeRoster();
+  renderPlayerManager();
+  renderMatchScore();
+  saveCurrentMatchState();
 }
 
 function applyMatchSettings(nextSettings) {
@@ -2328,17 +2343,30 @@ function initSettings() {
 }
 
 function initStopwatch() {
-  document.getElementById("stopwatchToggle").onclick = () => stopwatchStartedAt ? pauseStopwatch() : startStopwatch();
+  const hiddenToggle = document.getElementById("stopwatchToggle");
+  if (hiddenToggle) hiddenToggle.onclick = toggleStopwatch;
+
   ["matchClockToggle", "playtimeMatchClockToggle"].forEach(id => {
     const button = document.getElementById(id);
-    if (button) button.onclick = () => stopwatchStartedAt ? pauseStopwatch() : startStopwatch();
+    if (button) button.onclick = toggleStopwatch;
   });
+
   document.getElementById("stopwatchReset").onclick = () => {
     const word = getPeriodLabelWord().toLowerCase();
     if (!confirm(`Nollställ tiden och statistiken för aktuell ${word}?`)) return;
     resetCurrentHalf();
   };
+
+  const resetWholeMatchBtn = document.getElementById("resetWholeMatchBtn");
+  if (resetWholeMatchBtn) {
+    resetWholeMatchBtn.onclick = () => {
+      if (!confirm("Nollställ hela matchens tid, resultat, mål och spelarstatistik? Uppställningen och motståndarlaget behålls.")) return;
+      resetWholeCurrentMatch();
+    };
+  }
+
   document.getElementById("clearPlaytimeSelection").onclick = clearPlaytimePlayerSelection;
+  setStopwatchControlState(Boolean(stopwatchStartedAt));
   updateHalfUI();
   updateStopwatchDisplay();
   renderLineupPanel();
