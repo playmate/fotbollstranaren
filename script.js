@@ -1,4 +1,4 @@
-const APP_VERSION = "v0.3.0";
+const APP_VERSION = "v0.3.1";
 
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
@@ -140,13 +140,13 @@ let currentExerciseIndex = 0;
 
 const matchInitial = {
   pitchPlayers: [
-    {name:"Liam", indicator:"1", x:30, y:68},
-    {name:"Finn", indicator:"2", x:70, y:68},
-    {name:"Charles", indicator:"3", x:50, y:54},
-    {name:"Erik", indicator:"4", x:35, y:38},
-    {name:"Ian", indicator:"MV", x:50, y:90}
+    {name:"Liam", indicator:"1", x:50, y:24},
+    {name:"Ian", indicator:"2", x:30, y:52},
+    {name:"Erik", indicator:"3", x:70, y:52},
+    {name:"Frans", indicator:"4", x:50, y:72},
+    {name:"Endrit", indicator:"MV", x:50, y:90}
   ],
-  benchPlayers: ["Frans","Endrit","John"],
+  benchPlayers: ["Finn","Charles","John"],
   opponents: [
     {indicator:"1", x:30, y:28},
     {indicator:"2", x:70, y:28},
@@ -344,7 +344,7 @@ function renderPlayerCards() {
     <div class="player-card">
       <div class="player-avatar">${name[0]}</div>
       <h3>${name}</h3>
-      <p>Spelare • född 2018</p>
+      <p>Spelare</p>
     </div>
   `).join("");
 }
@@ -453,7 +453,7 @@ function initVersionTracker() {
   const text = document.getElementById("versionText");
   if (!tracker || !text) return;
 
-  const deployedAt = "2026-10-02 13:45";
+  const deployedAt = "2026-10-02";
   text.textContent = `Version ${APP_VERSION} • ${deployedAt}`;
   tracker.classList.add("is-current");
 }
