@@ -1,4 +1,4 @@
-const APP_VERSION = "v1.1.2";
+const APP_VERSION = "v1.2.0";
 
 const DEFAULT_PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const MATCH_SETTINGS_KEY = "fotbollstranaren-match-settings";
@@ -114,6 +114,7 @@ let stopwatchLastTick = null;
 let selectedPlaytimePlayer = null;
 let matchScore = { home: 0, away: 0 };
 let goalEvents = [];
+let currentMatchActive = false;
 let autoSaveReady = false;
 const CURRENT_MATCH_KEY = "fotbollstranaren-current-match";
 
@@ -151,6 +152,19 @@ function getOpponentName() {
   return document.getElementById("opponentName")?.value.trim() || "Motståndare";
 }
 
+function updateOpponentLabel() {
+  const label = document.getElementById("opponentNameLabel");
+  if (label) label.textContent = getOpponentName();
+}
+
+function setMatchActiveUI(active) {
+  currentMatchActive = Boolean(active);
+  const empty = document.getElementById("matchEmptyState");
+  const content = document.getElementById("matchActiveContent");
+  if (empty) empty.hidden = currentMatchActive;
+  if (content) content.hidden = !currentMatchActive;
+}
+
 function getGoalCount(name) {
   return goalEvents.filter(event => event.playerName === name).length;
 }
@@ -170,10 +184,11 @@ function getPitchState() {
 }
 
 function saveCurrentMatchState() {
-  if (!autoSaveReady) return;
+  if (!autoSaveReady || !currentMatchActive) return;
 
   const state = {
-    version: 1,
+    version: 2,
+    active: true,
     savedAt: Date.now(),
     currentHalf,
     halfElapsedMs: [...halfElapsedMs],
@@ -203,7 +218,9 @@ function restoreCurrentMatchState() {
   } catch {
     state = null;
   }
-  if (!state) return false;
+  if (!state || state.active === false) return false;
+
+  currentMatchActive = true;
 
   const pitch = document.getElementById("matchPitch");
   const bench = document.getElementById("bench");
@@ -270,6 +287,8 @@ function restoreCurrentMatchState() {
 
   const opponentInput = document.getElementById("opponentName");
   if (opponentInput) opponentInput.value = state.opponentName || "";
+  updateOpponentLabel();
+  setMatchActiveUI(true);
 
   renderMatchScore();
   updateHalfUI();
@@ -1058,10 +1077,8 @@ function wireMatchTools() {
   document.getElementById("homeGoalMinus").onclick = removeLastHomeGoal;
   document.getElementById("awayGoalPlus").onclick = () => changeAwayScore(1);
   document.getElementById("awayGoalMinus").onclick = () => changeAwayScore(-1);
-  document.getElementById("newMatchBtn").onclick = startNewMatch;
-
-  const opponentInput = document.getElementById("opponentName");
-  if (opponentInput) opponentInput.addEventListener("input", saveCurrentMatchState);
+  document.getElementById("newMatchBtn").onclick = requestNewMatch;
+  document.getElementById("startFirstMatchBtn").onclick = requestNewMatch;
 
   document.getElementById("closeGoalScorerModal").onclick = closeGoalScorerModal;
   document.querySelectorAll("[data-close-goal-modal]").forEach(el => {
@@ -1070,17 +1087,86 @@ function wireMatchTools() {
   document.getElementById("goalWithoutScorer").onclick = () => recordHomeGoal(null);
 
   renderMatchScore();
+
+  const opponentForm = document.getElementById("newMatchOpponentForm");
+  const opponentField = document.getElementById("newMatchOpponentInput");
+  if (opponentForm && opponentField) {
+    opponentForm.onsubmit = event => {
+      event.preventDefault();
+      const opponent = opponentField.value.trim();
+      if (!opponent) return;
+      closeNewMatchOpponentModal();
+      beginNewMatch(opponent);
+    };
+  }
+
+  document.getElementById("closeNewMatchOpponentModal").onclick = closeNewMatchOpponentModal;
+  document.querySelectorAll("[data-close-new-match-opponent]").forEach(el => {
+    el.onclick = closeNewMatchOpponentModal;
+  });
+
+  document.getElementById("cancelNewMatchBtn").onclick = closeOngoingMatchModal;
+  document.querySelectorAll("[data-close-ongoing-match]").forEach(el => {
+    el.onclick = closeOngoingMatchModal;
+  });
+
+  document.getElementById("saveAndNewMatchBtn").onclick = () => {
+    saveCurrentMatchBeforeNew();
+    closeOngoingMatchModal();
+    currentMatchActive = false;
+    clearCurrentMatchState();
+    openNewMatchOpponentModal();
+  };
+
+  document.getElementById("discardAndNewMatchBtn").onclick = () => {
+    closeOngoingMatchModal();
+    if (stopwatchStartedAt) pauseStopwatch();
+    currentMatchActive = false;
+    clearCurrentMatchState();
+    openNewMatchOpponentModal();
+  };
 }
 
 function hasCurrentMatchActivity() {
   const totalMs = halfElapsedMs.reduce((sum, ms) => sum + ms, 0) + (stopwatchStartedAt ? Date.now() - stopwatchStartedAt : 0);
-  return totalMs > 0 || matchScore.home > 0 || matchScore.away > 0 || goalEvents.length > 0;
+  return currentMatchActive && (totalMs > 0 || matchScore.home > 0 || matchScore.away > 0 || goalEvents.length > 0);
 }
 
-function startNewMatch() {
-  if (hasCurrentMatchActivity() && !confirm("Starta en ny match? Nuvarande osparade matchdata nollställs.")) return;
+function closeNewMatchOpponentModal() {
+  const modal = document.getElementById("newMatchOpponentModal");
+  if (modal) modal.hidden = true;
+}
+
+function openNewMatchOpponentModal() {
+  const modal = document.getElementById("newMatchOpponentModal");
+  const input = document.getElementById("newMatchOpponentInput");
+  if (!modal || !input) return;
+  input.value = "";
+  modal.hidden = false;
+  setTimeout(() => input.focus(), 0);
+}
+
+function closeOngoingMatchModal() {
+  const modal = document.getElementById("ongoingMatchModal");
+  if (modal) modal.hidden = true;
+}
+
+function requestNewMatch() {
+  if (currentMatchActive) {
+    const modal = document.getElementById("ongoingMatchModal");
+    if (modal) modal.hidden = false;
+    return;
+  }
+  openNewMatchOpponentModal();
+}
+
+function beginNewMatch(opponentName) {
+  const cleanOpponent = String(opponentName || "").trim();
+  if (!cleanOpponent) return;
 
   if (stopwatchStartedAt) pauseStopwatch();
+
+  currentMatchActive = true;
   selectedPlaytimePlayer = null;
   resetMatchScore();
   halfElapsedMs = makePeriodArray();
@@ -1091,14 +1177,30 @@ function startNewMatch() {
   });
 
   const opponentInput = document.getElementById("opponentName");
-  if (opponentInput) opponentInput.value = "";
+  if (opponentInput) opponentInput.value = cleanOpponent;
+  updateOpponentLabel();
 
+  clearCurrentMatchState();
   resetMatch();
   updateHalfUI();
   updateStopwatchDisplay();
   renderPlaytimeRoster();
-  clearCurrentMatchState();
+  setMatchActiveUI(true);
   saveCurrentMatchState();
+}
+
+function saveCurrentMatchBeforeNew() {
+  if (!currentMatchActive) return;
+  if (stopwatchStartedAt) onStopwatchTick();
+
+  const opponent = getOpponentName();
+  const name = opponent === "Motståndare"
+    ? `Match ${matchHistory.length + 1}`
+    : `Vaksala SK – ${opponent}`;
+
+  matchHistory.unshift(makeMatchSnapshot(name));
+  saveMatchHistory();
+  renderHistory();
 }
 
 function savePlayers() {
@@ -1243,6 +1345,10 @@ function makeMatchSnapshot(name) {
 }
 
 function saveCurrentMatchToHistory() {
+  if (!currentMatchActive) {
+    alert("Starta en match först.");
+    return;
+  }
   if (stopwatchStartedAt) onStopwatchTick();
 
   const opponent = getOpponentName();
@@ -1935,6 +2041,9 @@ document.getElementById("resetAllBtn").onclick = () => {
   renderExerciseList();
   loadExercise();
   resetAllMatchTimeAndStats();
+  currentMatchActive = false;
+  setMatchActiveUI(false);
+  clearCurrentMatchState();
   renderPlayerManager();
 };
 
@@ -1959,10 +2068,12 @@ loadExercise();
 
 autoSaveReady = false;
 if (!restoreCurrentMatchState()) {
+  currentMatchActive = false;
   resetMatch();
+  setMatchActiveUI(false);
 }
 autoSaveReady = true;
-saveCurrentMatchState();
+if (currentMatchActive) saveCurrentMatchState();
 
 document.addEventListener("visibilitychange", () => {
   if (document.hidden && stopwatchStartedAt) pauseStopwatch();
