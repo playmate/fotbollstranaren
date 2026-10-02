@@ -342,3 +342,97 @@ h2, h3 { margin-top: 0; }
   .match-pitch { width: 100%; }
   .player-token { width: 58px; height: 58px; font-size: 11px; }
 }
+
+
+/* v0.4.0 - vertical bench */
+.bench {
+  display: flex !important;
+  flex-direction: column;
+  grid-template-columns: none !important;
+  gap: 10px;
+  min-height: 170px;
+}
+
+.bench .bench-player {
+  width: 100% !important;
+  height: 52px !important;
+  min-height: 52px;
+  border-radius: 14px !important;
+  justify-content: flex-start !important;
+  padding: 0 16px !important;
+  font-size: 14px !important;
+  flex: 0 0 auto;
+}
+
+.bench .bench-player:not(.dragging-floating) {
+  position: static !important;
+  transform: none !important;
+}
+
+/* Keep the drag preview round even though bench entries are vertical cards */
+.bench-drag-preview,
+.bench .bench-player.bench-drag-preview {
+  width: 66px !important;
+  height: 66px !important;
+  min-height: 66px !important;
+  border-radius: 50% !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+.playtime-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.playtime-stats {
+  display: grid;
+  gap: 7px;
+}
+
+.playtime-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 9px;
+  border-radius: 9px;
+  background: #f3f7f4;
+  font-size: 12px;
+}
+
+.playtime-name {
+  font-weight: 800;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playtime-status {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.playtime-status.active {
+  color: var(--accent);
+}
+
+.playtime-time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+}
+
+body[data-theme="dark"] .playtime-row {
+  background: #223129;
+}
+
+@media (max-width: 640px) {
+  .bench-drag-preview,
+  .bench .bench-player.bench-drag-preview {
+    width: 58px !important;
+    height: 58px !important;
+    min-height: 58px !important;
+  }
+}
