@@ -1,8 +1,8 @@
-const APP_VERSION = "v0.4.3";
+const APP_VERSION = "v0.5.0";
 
 const PLAYERS = ["Liam","Frans","Finn","Charles","Erik","Ian","Endrit","John"];
 const ROLE_ORDER = {"1":1,"2":2,"3":3,"4":4,"MV":5};
-const playerStats = Object.fromEntries(PLAYERS.map(name => [name, { seconds: 0 }]));
+const playerStats = Object.fromEntries(PLAYERS.map(name => [name, { halves: [0, 0, 0] }]));
 
 const exercises = {
   passing: [
@@ -76,12 +76,17 @@ function fmtTime(totalSeconds) {
   return `${String(minutes).padStart(2,"0")}:${String(remain).padStart(2,"0")}`;
 }
 
+function getPlayerTotalSeconds(name) {
+  return (playerStats[name]?.halves || [0, 0, 0]).reduce((sum, seconds) => sum + seconds, 0);
+}
+
 function setTabs() {
   document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(btn.dataset.tab).classList.add("active");
+    if (btn.dataset.tab === "statistics") renderStatistics();
   }));
 }
 
@@ -387,35 +392,84 @@ function getActivePlayerNames() {
 
 function tickPlayerStats(deltaSeconds) {
   if (deltaSeconds <= 0) return;
-  getActivePlayerNames().forEach(name => { if (playerStats[name]) playerStats[name].seconds += deltaSeconds; });
+  getActivePlayerNames().forEach(name => {
+    if (playerStats[name]) playerStats[name].halves[currentHalf] += deltaSeconds;
+  });
+}
+
+function getLivePlayerHalfSeconds(name, halfIndex) {
+  const base = playerStats[name]?.halves?.[halfIndex] || 0;
+  const active = getActivePlayerNames().includes(name);
+  const liveDelta = active && stopwatchStartedAt && stopwatchLastTick && halfIndex === currentHalf
+    ? (Date.now() - stopwatchLastTick) / 1000
+    : 0;
+  return base + liveDelta;
+}
+
+function getLivePlayerTotalSeconds(name) {
+  return [0, 1, 2].reduce((sum, halfIndex) => sum + getLivePlayerHalfSeconds(name, halfIndex), 0);
+}
+
+function getSortedPlayerStats() {
+  const activeNames = new Set(getActivePlayerNames());
+
+  return PLAYERS.map((name, originalIndex) => ({
+    name,
+    originalIndex,
+    active: activeNames.has(name),
+    halves: [0, 1, 2].map(halfIndex => getLivePlayerHalfSeconds(name, halfIndex)),
+    total: getLivePlayerTotalSeconds(name)
+  })).sort((a, b) => {
+    if (a.total !== b.total) return a.total - b.total;
+    return a.originalIndex - b.originalIndex;
+  });
 }
 
 function updatePlaytimeStats() {
-  const activeNames = new Set(getActivePlayerNames());
-  const nowRunningSeconds = stopwatchStartedAt && stopwatchLastTick ? (Date.now() - stopwatchLastTick) / 1000 : 0;
-
-  const sorted = PLAYERS.map((name, originalIndex) => {
-    const base = playerStats[name]?.seconds || 0;
-    const live = activeNames.has(name) && stopwatchStartedAt ? base + nowRunningSeconds : base;
-    return {
-      name,
-      live,
-      originalIndex,
-      active: activeNames.has(name)
-    };
-  }).sort((a, b) => {
-    if (a.live !== b.live) return a.live - b.live;
-    return a.originalIndex - b.originalIndex;
-  });
+  const sorted = getSortedPlayerStats();
 
   const list = sorted.map((player, index) => {
     const status = player.active ? 'På plan' : 'Bänk';
     const statusClass = player.active ? 'active' : '';
-    return `<div class="playtime-row"><span class="playtime-rank">${index + 1}</span><div>${player.name}</div><div class="playtime-status ${statusClass}">${status}</div><div class="playtime-time">${fmtTime(player.live)}</div></div>`;
+    return `<div class="playtime-row"><span class="playtime-rank">${index + 1}</span><div>${player.name}</div><div class="playtime-status ${statusClass}">${status}</div><div class="playtime-time">${fmtTime(player.total)}</div></div>`;
   }).join("");
 
   const target = document.getElementById("playtimeStats");
   if (target) target.innerHTML = list;
+
+  renderStatistics();
+}
+
+function renderStatistics() {
+  const body = document.getElementById("statisticsBody");
+  const sorted = getSortedPlayerStats();
+
+  if (body) {
+    body.innerHTML = sorted.map(player => `
+      <tr>
+        <td><strong>${player.name}</strong></td>
+        <td>${fmtTime(player.halves[0])}</td>
+        <td>${fmtTime(player.halves[1])}</td>
+        <td>${fmtTime(player.halves[2])}</td>
+        <td>${fmtTime(player.total)}</td>
+        <td class="${player.active ? "statistics-status-active" : ""}">${player.active ? "På plan" : "Bänk"}</td>
+      </tr>
+    `).join("");
+  }
+
+  const halfTimes = halfElapsedMs.map((ms, index) =>
+    ms + (stopwatchStartedAt && currentHalf === index ? Date.now() - stopwatchStartedAt : 0)
+  );
+
+  const half1 = document.getElementById("statsHalf1");
+  const half2 = document.getElementById("statsHalf2");
+  const half3 = document.getElementById("statsHalf3");
+  const total = document.getElementById("statsMatchTotal");
+
+  if (half1) half1.textContent = fmtTime(halfTimes[0] / 1000);
+  if (half2) half2.textContent = fmtTime(halfTimes[1] / 1000);
+  if (half3) half3.textContent = fmtTime(halfTimes[2] / 1000);
+  if (total) total.textContent = fmtTime(halfTimes.reduce((sum, ms) => sum + ms, 0) / 1000);
 }
 
 function updateMatchInfo() {
@@ -435,9 +489,13 @@ function updateMatchInfo() {
   if (activeList) activeList.innerHTML = ownPlayers.sort((a,b)=>(ROLE_ORDER[a.dataset.indicator]||99)-(ROLE_ORDER[b.dataset.indicator]||99)).map(el => `<div class="roster-chip">${el.dataset.indicator} · ${el.dataset.name}</div>`).join("");
   if (benchList) benchList.innerHTML = benchPlayers.map(el => `<div class="roster-chip">${el.dataset.name}</div>`).join("");
   updatePlaytimeStats();
+  renderStatistics();
 }
 
-function resetPlayerStats() { PLAYERS.forEach(name => playerStats[name].seconds = 0); updatePlaytimeStats(); }
+function resetPlayerStats() {
+  PLAYERS.forEach(name => playerStats[name].halves = [0, 0, 0]);
+  updatePlaytimeStats();
+}
 
 function resetMatch() {
   const pitch = document.getElementById("matchPitch");
@@ -473,14 +531,14 @@ function renderPlayerCards() {
       <div class="player-avatar">${name[0]}</div>
       <h3>${name}</h3>
       <p>Spelare</p>
-      <p><strong>Speltid:</strong> <span data-player-card-time="${name}">${fmtTime(playerStats[name].seconds)}</span></p>
+      <p><strong>Speltid:</strong> <span data-player-card-time="${name}">${fmtTime(getPlayerTotalSeconds(name))}</span></p>
     </div>`).join("");
 }
 
 function updatePlayerCardsTimes() {
   document.querySelectorAll('[data-player-card-time]').forEach(el => {
     const name = el.getAttribute('data-player-card-time');
-    el.textContent = fmtTime(playerStats[name]?.seconds || 0);
+    el.textContent = fmtTime(getPlayerTotalSeconds(name));
   });
 }
 
@@ -553,6 +611,7 @@ function onStopwatchTick() {
   updateStopwatchDisplay();
   updatePlaytimeStats();
   updatePlayerCardsTimes();
+  renderStatistics();
 }
 
 function startStopwatch() {
